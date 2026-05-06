@@ -69,14 +69,35 @@ export class UsersService {
     }
   }
 
-  async getUserByProfile(id: string) {
+  async getUserProfile(id: string) {
     const user = await this.prismaService.user.findUnique({
       where: { id: id },
-      // include: {
-      //   collections: { select: { name: true } },
-      // },
+      include: {
+        collections: { select: { name: true } },
+      },
     });
     if (!user) throw new NotFoundException('User not found..');
     return user;
+  }
+
+  async hashAndStoreRefreshToken(userId: string, refreshToken: string) {
+    try {
+      if (refreshToken == '') {
+        await this.updateUserRefreshToken(userId, refreshToken);
+      } else {
+        const hashedRefreshToken = await argon2.hash(refreshToken);
+        await this.updateUserRefreshToken(userId, hashedRefreshToken);
+      }
+    } catch (err) {
+      console.error(err);
+      throw new Error('Failed to update user refresh token');
+    }
+  }
+
+  async updateUserRefreshToken(userId: string, hashedRefreshToken: string) {
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { hashed_refresh_token: hashedRefreshToken },
+    });
   }
 }

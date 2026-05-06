@@ -15,7 +15,7 @@ export class AuthController {
     return await this.authService.login(
       req.user.id,
       req.user.email,
-      //   req.user.role,
+      req.user.role,
     );
   }
 }

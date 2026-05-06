@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const result = await this.authService.validateJwtUser({
       sub: payload.sub,
       email: payload.email,
-      //   role: payload.role,
+      role: payload.role,
     });
     return result;
     // can also search for the userId in a list of revoked tokens

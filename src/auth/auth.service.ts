@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -10,6 +11,8 @@ import { UsersService } from 'src/users/users.service';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayloadDto } from 'src/users/dto/jwt-payload.dto';
+import refreshJwtConfig from './config/refresh-jwt.config';
+import type { ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +20,8 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    @Inject(refreshJwtConfig.KEY)
+    private refreshTokenConfig: ConfigType<typeof refreshJwtConfig>,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -33,26 +38,27 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
-      // role: user.role,
+      role: user.role,
     };
   }
 
-  async login(userId: string, email: string, userRole?: Role) {
-    const payload = { sub: userId, email: email };
-    const accessToken = await this.generateToken(payload);
+  async login(userId: string, email: string, userRole: Role) {
+    const payload = { sub: userId, email: email, role: userRole };
+    const { accessToken, refreshToken } = await this.generateToken(payload);
 
     // await this.usersService.hashAndStoreRefreshToken(userId, refreshToken);
-    // this.logger.log({ accessToken: accessToken, refreshToken: refreshToken });
-    // return { accessToken: accessToken, refreshToken: refreshToken };
-    return { accessToken: accessToken };
+    this.logger.log({ accessToken: accessToken, refreshToken: refreshToken });
+    return { accessToken: accessToken, refreshToken: refreshToken };
+    // return { accessToken: accessToken };
   }
 
   async generateToken(payload: JwtPayloadDto) {
-    // const [accessToken, refreshToken] = await Promise.all([
-    //   this.jwtService.signAsync(payload),
-    //   this.jwtService.signAsync(payload, this.refreshTokenConfig),
-    // ]);
-    return await this.jwtService.signAsync(payload);
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, this.refreshTokenConfig),
+    ]);
+    // return await this.jwtService.signAsync(payload);
+    return { accessToken, refreshToken };
   }
 
   async verifyPassword(

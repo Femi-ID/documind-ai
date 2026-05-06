@@ -55,4 +55,12 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-/generated/prisma
+src/generated/prisma
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+*.tsbuildinfo
+.eslintcache
+.prettiercache

@@ -9,7 +9,36 @@
 * 🟢 You can import this file directly.
 */
 
+export const Role = {
+  ADMIN: 'ADMIN',
+  USER: 'USER'
+} as const
+
+export type Role = (typeof Role)[keyof typeof Role]
 
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const DocumentFileType = {
+  PDF: 'PDF',
+  DOCX: 'DOCX',
+  TXT: 'TXT'
+} as const
+
+export type DocumentFileType = (typeof DocumentFileType)[keyof typeof DocumentFileType]
+
+
+export const DocumentStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED'
+} as const
+
+export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus]
+
+
+export const MessageRole = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT'
+} as const
+
+export type MessageRole = (typeof MessageRole)[keyof typeof MessageRole]

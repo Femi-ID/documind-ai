@@ -40,6 +40,12 @@ export type UserMinAggregateOutputType = {
   hashed_password: string | null
   full_name: string | null
   is_email_verified: boolean | null
+  role: $Enums.Role | null
+  email_verification_token: string | null
+  email_verification_expires_at: Date | null
+  password_reset_token: string | null
+  password_reset_expires_at: Date | null
+  hashed_refresh_token: string | null
   document_count: number | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -51,6 +57,12 @@ export type UserMaxAggregateOutputType = {
   hashed_password: string | null
   full_name: string | null
   is_email_verified: boolean | null
+  role: $Enums.Role | null
+  email_verification_token: string | null
+  email_verification_expires_at: Date | null
+  password_reset_token: string | null
+  password_reset_expires_at: Date | null
+  hashed_refresh_token: string | null
   document_count: number | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -62,6 +74,12 @@ export type UserCountAggregateOutputType = {
   hashed_password: number
   full_name: number
   is_email_verified: number
+  role: number
+  email_verification_token: number
+  email_verification_expires_at: number
+  password_reset_token: number
+  password_reset_expires_at: number
+  hashed_refresh_token: number
   document_count: number
   createdAt: number
   updatedAt: number
@@ -83,6 +101,12 @@ export type UserMinAggregateInputType = {
   hashed_password?: true
   full_name?: true
   is_email_verified?: true
+  role?: true
+  email_verification_token?: true
+  email_verification_expires_at?: true
+  password_reset_token?: true
+  password_reset_expires_at?: true
+  hashed_refresh_token?: true
   document_count?: true
   createdAt?: true
   updatedAt?: true
@@ -94,6 +118,12 @@ export type UserMaxAggregateInputType = {
   hashed_password?: true
   full_name?: true
   is_email_verified?: true
+  role?: true
+  email_verification_token?: true
+  email_verification_expires_at?: true
+  password_reset_token?: true
+  password_reset_expires_at?: true
+  hashed_refresh_token?: true
   document_count?: true
   createdAt?: true
   updatedAt?: true
@@ -105,6 +135,12 @@ export type UserCountAggregateInputType = {
   hashed_password?: true
   full_name?: true
   is_email_verified?: true
+  role?: true
+  email_verification_token?: true
+  email_verification_expires_at?: true
+  password_reset_token?: true
+  password_reset_expires_at?: true
+  hashed_refresh_token?: true
   document_count?: true
   createdAt?: true
   updatedAt?: true
@@ -203,6 +239,12 @@ export type UserGroupByOutputType = {
   hashed_password: string
   full_name: string
   is_email_verified: boolean
+  role: $Enums.Role
+  email_verification_token: string | null
+  email_verification_expires_at: Date | null
+  password_reset_token: string | null
+  password_reset_expires_at: Date | null
+  hashed_refresh_token: string
   document_count: number
   createdAt: Date
   updatedAt: Date
@@ -237,10 +279,18 @@ export type UserWhereInput = {
   hashed_password?: Prisma.StringFilter<"User"> | string
   full_name?: Prisma.StringFilter<"User"> | string
   is_email_verified?: Prisma.BoolFilter<"User"> | boolean
+  role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role
+  email_verification_token?: Prisma.StringNullableFilter<"User"> | string | null
+  email_verification_expires_at?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  password_reset_token?: Prisma.StringNullableFilter<"User"> | string | null
+  password_reset_expires_at?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  hashed_refresh_token?: Prisma.StringFilter<"User"> | string
   document_count?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
-  collections?: Prisma.CollectionsListRelationFilter
+  collections?: Prisma.CollectionListRelationFilter
+  documents?: Prisma.DocumentListRelationFilter
+  conversations?: Prisma.ConversationListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -249,10 +299,18 @@ export type UserOrderByWithRelationInput = {
   hashed_password?: Prisma.SortOrder
   full_name?: Prisma.SortOrder
   is_email_verified?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  email_verification_token?: Prisma.SortOrderInput | Prisma.SortOrder
+  email_verification_expires_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  password_reset_token?: Prisma.SortOrderInput | Prisma.SortOrder
+  password_reset_expires_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  hashed_refresh_token?: Prisma.SortOrder
   document_count?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  collections?: Prisma.CollectionsOrderByRelationAggregateInput
+  collections?: Prisma.CollectionOrderByRelationAggregateInput
+  documents?: Prisma.DocumentOrderByRelationAggregateInput
+  conversations?: Prisma.ConversationOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -264,10 +322,18 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   hashed_password?: Prisma.StringFilter<"User"> | string
   full_name?: Prisma.StringFilter<"User"> | string
   is_email_verified?: Prisma.BoolFilter<"User"> | boolean
+  role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role
+  email_verification_token?: Prisma.StringNullableFilter<"User"> | string | null
+  email_verification_expires_at?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  password_reset_token?: Prisma.StringNullableFilter<"User"> | string | null
+  password_reset_expires_at?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  hashed_refresh_token?: Prisma.StringFilter<"User"> | string
   document_count?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
-  collections?: Prisma.CollectionsListRelationFilter
+  collections?: Prisma.CollectionListRelationFilter
+  documents?: Prisma.DocumentListRelationFilter
+  conversations?: Prisma.ConversationListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -276,6 +342,12 @@ export type UserOrderByWithAggregationInput = {
   hashed_password?: Prisma.SortOrder
   full_name?: Prisma.SortOrder
   is_email_verified?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  email_verification_token?: Prisma.SortOrderInput | Prisma.SortOrder
+  email_verification_expires_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  password_reset_token?: Prisma.SortOrderInput | Prisma.SortOrder
+  password_reset_expires_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  hashed_refresh_token?: Prisma.SortOrder
   document_count?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -295,6 +367,12 @@ export type UserScalarWhereWithAggregatesInput = {
   hashed_password?: Prisma.StringWithAggregatesFilter<"User"> | string
   full_name?: Prisma.StringWithAggregatesFilter<"User"> | string
   is_email_verified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  role?: Prisma.EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
+  email_verification_token?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  email_verification_expires_at?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  password_reset_token?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  password_reset_expires_at?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  hashed_refresh_token?: Prisma.StringWithAggregatesFilter<"User"> | string
   document_count?: Prisma.IntWithAggregatesFilter<"User"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -306,10 +384,18 @@ export type UserCreateInput = {
   hashed_password: string
   full_name: string
   is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
   document_count?: number
   createdAt?: Date | string
   updatedAt?: Date | string
-  collections?: Prisma.CollectionsCreateNestedManyWithoutUserInput
+  collections?: Prisma.CollectionCreateNestedManyWithoutUserInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  conversations?: Prisma.ConversationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -318,10 +404,18 @@ export type UserUncheckedCreateInput = {
   hashed_password: string
   full_name: string
   is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
   document_count?: number
   createdAt?: Date | string
   updatedAt?: Date | string
-  collections?: Prisma.CollectionsUncheckedCreateNestedManyWithoutUserInput
+  collections?: Prisma.CollectionUncheckedCreateNestedManyWithoutUserInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  conversations?: Prisma.ConversationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -330,10 +424,18 @@ export type UserUpdateInput = {
   hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
   full_name?: Prisma.StringFieldUpdateOperationsInput | string
   is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
   document_count?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  collections?: Prisma.CollectionsUpdateManyWithoutUserNestedInput
+  collections?: Prisma.CollectionUpdateManyWithoutUserNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  conversations?: Prisma.ConversationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -342,10 +444,18 @@ export type UserUncheckedUpdateInput = {
   hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
   full_name?: Prisma.StringFieldUpdateOperationsInput | string
   is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
   document_count?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  collections?: Prisma.CollectionsUncheckedUpdateManyWithoutUserNestedInput
+  collections?: Prisma.CollectionUncheckedUpdateManyWithoutUserNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  conversations?: Prisma.ConversationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -354,6 +464,12 @@ export type UserCreateManyInput = {
   hashed_password: string
   full_name: string
   is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
   document_count?: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -365,6 +481,12 @@ export type UserUpdateManyMutationInput = {
   hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
   full_name?: Prisma.StringFieldUpdateOperationsInput | string
   is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
   document_count?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -376,6 +498,12 @@ export type UserUncheckedUpdateManyInput = {
   hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
   full_name?: Prisma.StringFieldUpdateOperationsInput | string
   is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
   document_count?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -387,6 +515,12 @@ export type UserCountOrderByAggregateInput = {
   hashed_password?: Prisma.SortOrder
   full_name?: Prisma.SortOrder
   is_email_verified?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  email_verification_token?: Prisma.SortOrder
+  email_verification_expires_at?: Prisma.SortOrder
+  password_reset_token?: Prisma.SortOrder
+  password_reset_expires_at?: Prisma.SortOrder
+  hashed_refresh_token?: Prisma.SortOrder
   document_count?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -402,6 +536,12 @@ export type UserMaxOrderByAggregateInput = {
   hashed_password?: Prisma.SortOrder
   full_name?: Prisma.SortOrder
   is_email_verified?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  email_verification_token?: Prisma.SortOrder
+  email_verification_expires_at?: Prisma.SortOrder
+  password_reset_token?: Prisma.SortOrder
+  password_reset_expires_at?: Prisma.SortOrder
+  hashed_refresh_token?: Prisma.SortOrder
   document_count?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -413,6 +553,12 @@ export type UserMinOrderByAggregateInput = {
   hashed_password?: Prisma.SortOrder
   full_name?: Prisma.SortOrder
   is_email_verified?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  email_verification_token?: Prisma.SortOrder
+  email_verification_expires_at?: Prisma.SortOrder
+  password_reset_token?: Prisma.SortOrder
+  password_reset_expires_at?: Prisma.SortOrder
+  hashed_refresh_token?: Prisma.SortOrder
   document_count?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -433,6 +579,18 @@ export type StringFieldUpdateOperationsInput = {
 
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
+}
+
+export type EnumRoleFieldUpdateOperationsInput = {
+  set?: $Enums.Role
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type IntFieldUpdateOperationsInput = {
@@ -461,15 +619,51 @@ export type UserUpdateOneRequiredWithoutCollectionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCollectionsInput, Prisma.UserUpdateWithoutCollectionsInput>, Prisma.UserUncheckedUpdateWithoutCollectionsInput>
 }
 
+export type UserCreateNestedOneWithoutDocumentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDocumentsInput, Prisma.UserUncheckedCreateWithoutDocumentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDocumentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutDocumentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDocumentsInput, Prisma.UserUncheckedCreateWithoutDocumentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDocumentsInput
+  upsert?: Prisma.UserUpsertWithoutDocumentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDocumentsInput, Prisma.UserUpdateWithoutDocumentsInput>, Prisma.UserUncheckedUpdateWithoutDocumentsInput>
+}
+
+export type UserCreateNestedOneWithoutConversationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutConversationsInput, Prisma.UserUncheckedCreateWithoutConversationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutConversationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutConversationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutConversationsInput, Prisma.UserUncheckedCreateWithoutConversationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutConversationsInput
+  upsert?: Prisma.UserUpsertWithoutConversationsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutConversationsInput, Prisma.UserUpdateWithoutConversationsInput>, Prisma.UserUncheckedUpdateWithoutConversationsInput>
+}
+
 export type UserCreateWithoutCollectionsInput = {
   id?: string
   email: string
   hashed_password: string
   full_name: string
   is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
   document_count?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  conversations?: Prisma.ConversationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCollectionsInput = {
@@ -478,9 +672,17 @@ export type UserUncheckedCreateWithoutCollectionsInput = {
   hashed_password: string
   full_name: string
   is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
   document_count?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  conversations?: Prisma.ConversationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCollectionsInput = {
@@ -505,9 +707,17 @@ export type UserUpdateWithoutCollectionsInput = {
   hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
   full_name?: Prisma.StringFieldUpdateOperationsInput | string
   is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
   document_count?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  conversations?: Prisma.ConversationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCollectionsInput = {
@@ -516,9 +726,201 @@ export type UserUncheckedUpdateWithoutCollectionsInput = {
   hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
   full_name?: Prisma.StringFieldUpdateOperationsInput | string
   is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
   document_count?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  conversations?: Prisma.ConversationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutDocumentsInput = {
+  id?: string
+  email: string
+  hashed_password: string
+  full_name: string
+  is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
+  document_count?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  collections?: Prisma.CollectionCreateNestedManyWithoutUserInput
+  conversations?: Prisma.ConversationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutDocumentsInput = {
+  id?: string
+  email: string
+  hashed_password: string
+  full_name: string
+  is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
+  document_count?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  collections?: Prisma.CollectionUncheckedCreateNestedManyWithoutUserInput
+  conversations?: Prisma.ConversationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutDocumentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDocumentsInput, Prisma.UserUncheckedCreateWithoutDocumentsInput>
+}
+
+export type UserUpsertWithoutDocumentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDocumentsInput, Prisma.UserUncheckedUpdateWithoutDocumentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDocumentsInput, Prisma.UserUncheckedCreateWithoutDocumentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDocumentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDocumentsInput, Prisma.UserUncheckedUpdateWithoutDocumentsInput>
+}
+
+export type UserUpdateWithoutDocumentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.StringFieldUpdateOperationsInput | string
+  is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
+  document_count?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  collections?: Prisma.CollectionUpdateManyWithoutUserNestedInput
+  conversations?: Prisma.ConversationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDocumentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.StringFieldUpdateOperationsInput | string
+  is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
+  document_count?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  collections?: Prisma.CollectionUncheckedUpdateManyWithoutUserNestedInput
+  conversations?: Prisma.ConversationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutConversationsInput = {
+  id?: string
+  email: string
+  hashed_password: string
+  full_name: string
+  is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
+  document_count?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  collections?: Prisma.CollectionCreateNestedManyWithoutUserInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutConversationsInput = {
+  id?: string
+  email: string
+  hashed_password: string
+  full_name: string
+  is_email_verified?: boolean
+  role?: $Enums.Role
+  email_verification_token?: string | null
+  email_verification_expires_at?: Date | string | null
+  password_reset_token?: string | null
+  password_reset_expires_at?: Date | string | null
+  hashed_refresh_token?: string
+  document_count?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  collections?: Prisma.CollectionUncheckedCreateNestedManyWithoutUserInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutConversationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutConversationsInput, Prisma.UserUncheckedCreateWithoutConversationsInput>
+}
+
+export type UserUpsertWithoutConversationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutConversationsInput, Prisma.UserUncheckedUpdateWithoutConversationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutConversationsInput, Prisma.UserUncheckedCreateWithoutConversationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutConversationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutConversationsInput, Prisma.UserUncheckedUpdateWithoutConversationsInput>
+}
+
+export type UserUpdateWithoutConversationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.StringFieldUpdateOperationsInput | string
+  is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
+  document_count?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  collections?: Prisma.CollectionUpdateManyWithoutUserNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutConversationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  hashed_password?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.StringFieldUpdateOperationsInput | string
+  is_email_verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  email_verification_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_verification_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  password_reset_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password_reset_expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hashed_refresh_token?: Prisma.StringFieldUpdateOperationsInput | string
+  document_count?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  collections?: Prisma.CollectionUncheckedUpdateManyWithoutUserNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -528,10 +930,14 @@ export type UserUncheckedUpdateWithoutCollectionsInput = {
 
 export type UserCountOutputType = {
   collections: number
+  documents: number
+  conversations: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   collections?: boolean | UserCountOutputTypeCountCollectionsArgs
+  documents?: boolean | UserCountOutputTypeCountDocumentsArgs
+  conversations?: boolean | UserCountOutputTypeCountConversationsArgs
 }
 
 /**
@@ -548,7 +954,21 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  * UserCountOutputType without action
  */
 export type UserCountOutputTypeCountCollectionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CollectionsWhereInput
+  where?: Prisma.CollectionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDocumentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DocumentWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountConversationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ConversationWhereInput
 }
 
 
@@ -558,10 +978,18 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   hashed_password?: boolean
   full_name?: boolean
   is_email_verified?: boolean
+  role?: boolean
+  email_verification_token?: boolean
+  email_verification_expires_at?: boolean
+  password_reset_token?: boolean
+  password_reset_expires_at?: boolean
+  hashed_refresh_token?: boolean
   document_count?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   collections?: boolean | Prisma.User$collectionsArgs<ExtArgs>
+  documents?: boolean | Prisma.User$documentsArgs<ExtArgs>
+  conversations?: boolean | Prisma.User$conversationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -571,6 +999,12 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   hashed_password?: boolean
   full_name?: boolean
   is_email_verified?: boolean
+  role?: boolean
+  email_verification_token?: boolean
+  email_verification_expires_at?: boolean
+  password_reset_token?: boolean
+  password_reset_expires_at?: boolean
+  hashed_refresh_token?: boolean
   document_count?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -582,6 +1016,12 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   hashed_password?: boolean
   full_name?: boolean
   is_email_verified?: boolean
+  role?: boolean
+  email_verification_token?: boolean
+  email_verification_expires_at?: boolean
+  password_reset_token?: boolean
+  password_reset_expires_at?: boolean
+  hashed_refresh_token?: boolean
   document_count?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -593,14 +1033,22 @@ export type UserSelectScalar = {
   hashed_password?: boolean
   full_name?: boolean
   is_email_verified?: boolean
+  role?: boolean
+  email_verification_token?: boolean
+  email_verification_expires_at?: boolean
+  password_reset_token?: boolean
+  password_reset_expires_at?: boolean
+  hashed_refresh_token?: boolean
   document_count?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "hashed_password" | "full_name" | "is_email_verified" | "document_count" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "hashed_password" | "full_name" | "is_email_verified" | "role" | "email_verification_token" | "email_verification_expires_at" | "password_reset_token" | "password_reset_expires_at" | "hashed_refresh_token" | "document_count" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   collections?: boolean | Prisma.User$collectionsArgs<ExtArgs>
+  documents?: boolean | Prisma.User$documentsArgs<ExtArgs>
+  conversations?: boolean | Prisma.User$conversationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -609,7 +1057,9 @@ export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
-    collections: Prisma.$CollectionsPayload<ExtArgs>[]
+    collections: Prisma.$CollectionPayload<ExtArgs>[]
+    documents: Prisma.$DocumentPayload<ExtArgs>[]
+    conversations: Prisma.$ConversationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -617,6 +1067,12 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     hashed_password: string
     full_name: string
     is_email_verified: boolean
+    role: $Enums.Role
+    email_verification_token: string | null
+    email_verification_expires_at: Date | null
+    password_reset_token: string | null
+    password_reset_expires_at: Date | null
+    hashed_refresh_token: string
     document_count: number
     createdAt: Date
     updatedAt: Date
@@ -1014,7 +1470,9 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  collections<T extends Prisma.User$collectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$collectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CollectionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  collections<T extends Prisma.User$collectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$collectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CollectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  documents<T extends Prisma.User$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  conversations<T extends Prisma.User$conversationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$conversationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ConversationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1049,6 +1507,12 @@ export interface UserFieldRefs {
   readonly hashed_password: Prisma.FieldRef<"User", 'String'>
   readonly full_name: Prisma.FieldRef<"User", 'String'>
   readonly is_email_verified: Prisma.FieldRef<"User", 'Boolean'>
+  readonly role: Prisma.FieldRef<"User", 'Role'>
+  readonly email_verification_token: Prisma.FieldRef<"User", 'String'>
+  readonly email_verification_expires_at: Prisma.FieldRef<"User", 'DateTime'>
+  readonly password_reset_token: Prisma.FieldRef<"User", 'String'>
+  readonly password_reset_expires_at: Prisma.FieldRef<"User", 'DateTime'>
+  readonly hashed_refresh_token: Prisma.FieldRef<"User", 'String'>
   readonly document_count: Prisma.FieldRef<"User", 'Int'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -1449,23 +1913,71 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
  */
 export type User$collectionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Collections
+   * Select specific fields to fetch from the Collection
    */
-  select?: Prisma.CollectionsSelect<ExtArgs> | null
+  select?: Prisma.CollectionSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Collections
+   * Omit specific fields from the Collection
    */
-  omit?: Prisma.CollectionsOmit<ExtArgs> | null
+  omit?: Prisma.CollectionOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.CollectionsInclude<ExtArgs> | null
-  where?: Prisma.CollectionsWhereInput
-  orderBy?: Prisma.CollectionsOrderByWithRelationInput | Prisma.CollectionsOrderByWithRelationInput[]
-  cursor?: Prisma.CollectionsWhereUniqueInput
+  include?: Prisma.CollectionInclude<ExtArgs> | null
+  where?: Prisma.CollectionWhereInput
+  orderBy?: Prisma.CollectionOrderByWithRelationInput | Prisma.CollectionOrderByWithRelationInput[]
+  cursor?: Prisma.CollectionWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.CollectionsScalarFieldEnum | Prisma.CollectionsScalarFieldEnum[]
+  distinct?: Prisma.CollectionScalarFieldEnum | Prisma.CollectionScalarFieldEnum[]
+}
+
+/**
+ * User.documents
+ */
+export type User$documentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Document
+   */
+  select?: Prisma.DocumentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Document
+   */
+  omit?: Prisma.DocumentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DocumentInclude<ExtArgs> | null
+  where?: Prisma.DocumentWhereInput
+  orderBy?: Prisma.DocumentOrderByWithRelationInput | Prisma.DocumentOrderByWithRelationInput[]
+  cursor?: Prisma.DocumentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DocumentScalarFieldEnum | Prisma.DocumentScalarFieldEnum[]
+}
+
+/**
+ * User.conversations
+ */
+export type User$conversationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Conversation
+   */
+  select?: Prisma.ConversationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Conversation
+   */
+  omit?: Prisma.ConversationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ConversationInclude<ExtArgs> | null
+  where?: Prisma.ConversationWhereInput
+  orderBy?: Prisma.ConversationOrderByWithRelationInput | Prisma.ConversationOrderByWithRelationInput[]
+  cursor?: Prisma.ConversationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ConversationScalarFieldEnum | Prisma.ConversationScalarFieldEnum[]
 }
 
 /**

@@ -4,49 +4,139 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-  moduleFormat    = "cjs"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-
 model User {
-  id String @default(uuid()) @id
-  email String @unique
-  hashed_password String
-  full_name String @db.VarChar(200)
-  is_email_verified Boolean @default(false)
-  role Role 
-  email_verification_token String?
+  id                            String    @id @default(uuid())
+  email                         String    @unique
+  hashed_password               String
+  full_name                     String    @db.VarChar(200)
+  is_email_verified             Boolean   @default(false)
+  role                          Role      @default(USER)
+  email_verification_token      String?
   email_verification_expires_at DateTime?
-  password_reset_token String?
-  password_reset_expires_at String?
+  password_reset_token          String?
+  password_reset_expires_at     DateTime?
+  hashed_refresh_token            String    @default("")
 
-  document_count Int @default(0)
-  collections Collections[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  document_count Int            @default(0)
+  collections    Collection[]
+  documents      Document[]
+  conversations  Conversation[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 enum Role {
   ADMIN
-  OWNER
-  READER
+  USER
 }
 
-model Collections {
-  id String @default(uuid()) @id
-  name String @db.VarChar(255)
-  description String? 
-  user User @relation(fields: [userId], references: [id])
-  userId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Collection {
+  id            String         @id @default(uuid())
+  name          String         @db.VarChar(255)
+  description   String?
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  documents     Document[]
+  conversations Conversation[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@unique([userId, name])
 }
 
+model Document {
+  id                String           @id @default(uuid())
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  collection        Collection       @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  collectionId      String
+  original_filename String           @db.VarChar(255)
+  file_type         DocumentFileType // add an enum to this field
+  file_size_bytes   Int
+  s3_key            String           @unique
+  checkSum          String // to prevent duplicate uploads
+  status            DocumentStatus   @default(PENDING)
+  statusMessage     String?
+  pageCount         Int?
+  totalChunks       Int              @default(0)
+  chunks            Chunk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum DocumentFileType {
+  PDF
+  DOCX
+  TXT
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Chunk {
+  id              String                       @id @default(uuid())
+  document        Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId      String
+  content         String // the actual text of this chunk
+  chunkIndex      Int
+  tokenCount      Int
+  pageNumber      Int?
+  startCharOffset Int
+  endCharOffset   Int // which page the chunk comes from
+  embedding       Unsupported("vector(1536)")? // VECTOR(1536), nullable (populated after embedding generation; 1536 dimensions for OpenAI text-embedding-3-small)
+  metadata        Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([documentId])
+}
+
+// **********     **********      **********
+
+model Conversation {
+  id           String     @id @default(uuid())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId String
+  title        String?    @db.VarChar(255)
+  isActive     Boolean    @default(true)
+  messages     Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  role           MessageRole
+  content        String
+  citations      Json?
+  tokenUsage     Json?
+  model          String?      @db.VarChar(50)
+  latencyMs      Int?
+
+  createdAt DateTime @default(now())
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}

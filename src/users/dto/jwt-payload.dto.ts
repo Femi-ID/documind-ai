@@ -1,10 +1,4 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { Role } from '../enums/role.enums';
 
 export class JwtPayloadDto {
@@ -16,7 +10,7 @@ export class JwtPayloadDto {
   @IsEmail()
   email: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsEnum(Role, { message: 'Must an option from enum- Role' })
   role?: Role;
 }
