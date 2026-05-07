@@ -64,3 +64,6 @@ docker-compose.override.yml
 *.tsbuildinfo
 .eslintcache
 .prettiercache
+
+nestjs-minio-file-upload-guide.md
+software-project-engineering-guide.md
