@@ -11,6 +11,6 @@ export class JwtPayloadDto {
   email: string;
 
   @IsNotEmpty()
-  @IsEnum(Role, { message: 'Must an option from enum- Role' })
-  role?: Role;
+  @IsEnum(Role, { message: 'Must be an option from enum- Role' })
+  role: Role;
 }

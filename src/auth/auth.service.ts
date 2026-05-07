@@ -44,15 +44,14 @@ export class AuthService {
 
   async login(userId: string, email: string, userRole: Role) {
     const payload = { sub: userId, email: email, role: userRole };
-    const { accessToken, refreshToken } = await this.generateToken(payload);
+    const { accessToken, refreshToken } = await this.generateTokens(payload);
 
-    // await this.usersService.hashAndStoreRefreshToken(userId, refreshToken);
+    await this.usersService.hashAndStoreRefreshToken(userId, refreshToken);
     this.logger.log({ accessToken: accessToken, refreshToken: refreshToken });
     return { accessToken: accessToken, refreshToken: refreshToken };
-    // return { accessToken: accessToken };
   }
 
-  async generateToken(payload: JwtPayloadDto) {
+  async generateTokens(payload: JwtPayloadDto) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
       this.jwtService.signAsync(payload, this.refreshTokenConfig),
@@ -77,15 +76,49 @@ export class AuthService {
     const user = await this.usersService.getUserByEmail(payload.email);
     if (!user) throw new BadRequestException('Invalid userId provided.');
 
-    // if (payload.role !== user.role || payload.email !== user.email)
-    //   throw new UnauthorizedException(
-    //     "Payload role/email doesn't match the user's info",
-    //   );
+    if (payload.role !== user.role || payload.email !== user.email)
+      throw new UnauthorizedException(
+        "Payload's information doesn't match the user's info",
+      );
     const currentUser = {
       id: payload.sub,
       email: payload.email,
       role: payload.role,
     };
     return currentUser;
+  }
+
+  async validateRefreshToken(payload: JwtPayloadDto, refreshToken: string) {
+    try {
+      const user = await this.usersService.getUserById(payload.sub);
+      if (!user.hashed_refresh_token)
+        throw new UnauthorizedException('Invalid refresh token!');
+
+      const refreshTokenMatches = await argon2.verify(
+        user.hashed_refresh_token,
+        refreshToken,
+      );
+      if (!refreshTokenMatches)
+        throw new UnauthorizedException('Invalid refresh token...');
+      return { id: payload.sub, email: payload.email, role: payload.role };
+      // return { ...payload };
+    } catch (error) {
+      this.logger.error(error);
+      throw new UnauthorizedException({
+        message: 'Unable to validate refresh token...',
+      });
+    }
+  }
+
+  async generateNewTokens(payload: JwtPayloadDto) {
+    const { accessToken, refreshToken } = await this.generateTokens(payload);
+    await this.usersService.hashAndStoreRefreshToken(payload.sub, refreshToken);
+
+    this.logger.log({ accessToken: accessToken, refreshToken: refreshToken });
+    return { accessToken: accessToken, refreshToken: refreshToken };
+  }
+
+  async logout(userId: string) {
+    await this.usersService.hashAndStoreRefreshToken(userId, '');
   }
 }
