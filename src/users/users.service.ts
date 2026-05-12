@@ -100,4 +100,9 @@ export class UsersService {
       data: { hashed_refresh_token: hashedRefreshToken },
     });
   }
+
+  async UserDocumentCount(userId: string): Promise<number> {
+    const user = await this.getUserById(userId);
+    return user.document_count; // search how to retrieve a particular field from a model instead of everything
+  }
 }

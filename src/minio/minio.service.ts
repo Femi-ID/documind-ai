@@ -1,7 +1,14 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { MINIO_TOKEN } from './decorators/minio.decorator';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class MinioService implements OnModuleInit {
@@ -11,44 +18,82 @@ export class MinioService implements OnModuleInit {
   constructor(
     @Inject(MINIO_TOKEN) private readonly minioClient: Minio.Client,
     private configService: ConfigService,
+    private readonly usersService: UsersService,
   ) {
     this.bucketName =
       this.configService.getOrThrow<string>('MINIO_BUCKET_NAME');
   }
 
   async onModuleInit(): Promise<void> {
-    const bucketExists = await this.minioClient.bucketExists(this.bucketName);
-    if (!bucketExists) {
-      await this.minioClient.makeBucket(this.bucketName);
-      this.logger.log(`Bucket ${this.bucketName} created successfully.`);
-    } else {
-      this.logger.log(`Bucket ${this.bucketName} already exists.`);
+    try {
+      const bucketExists = await this.minioClient.bucketExists(this.bucketName);
+      if (!bucketExists) {
+        await this.minioClient.makeBucket(this.bucketName);
+        this.logger.log(`Bucket ${this.bucketName} created successfully.`);
+      } else {
+        this.logger.log(`Bucket ${this.bucketName} already exists.`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to initialize bucket: ${error.message}`);
+      throw error;
     }
   }
 
+  /**
+   * Upload a file buffer to MinIO.
+   * Returns the object name (S3 key) and etag.
+   */
   async uploadFile(
-    file: Express.Multer.File,
-    folder: string = '',
+    buffer: Buffer,
+    objectName: string,
+    size: number,
+    contentType: string,
+    metadata: Record<string, string> = {},
   ): Promise<{ objectName: string; etag: string }> {
-    const timestamp = Date.now();
-    const sanitizedName = file.originalname.replace(/\s+/g, '-');
-    const objectName = folder
-      ? `${folder}/${timestamp}-${sanitizedName}`
-      : `${timestamp}-${sanitizedName}`;
-    const etag = await this.minioClient.putObject(
+    const result = await this.minioClient.putObject(
       this.bucketName,
       objectName,
-      file.buffer,
-      file.size,
-      { 'Content-Type': file.mimetype },
+      buffer,
+      size,
+      { 'Content-Type': contentType, ...metadata },
     );
-
-    this.logger.log(
-      `File uploaded: ${objectName} (etag: ${JSON.stringify(etag)})`,
-    );
-    return { objectName, etag: etag.etag };
+    this.logger.log(`From minioService=> Uploaded: ${objectName} (etag: ${result.etag})`);
+    return { objectName, etag: result.etag };
   }
+  //   async uploadFile(
+  //     file: Express.Multer.File,
+  //     folder: string = '',
+  //     userId: string,
+  //   ): Promise<{ objectName: string; etag: string }> {
+  //     const userDocumentCount = await this.usersService.UserDocumentCount(userId);
+  //     if (userDocumentCount > 50)
+  //       throw new BadRequestException(
+  //         "User's maximum document upload reached...",
+  //       );
 
+  //     const timestamp = Date.now();
+  //     const sanitizedName = file.originalname.replace(/\s+/g, '-');
+  //     const objectName = folder
+  //       ? `${folder}/${timestamp}-${sanitizedName}`
+  //       : `${timestamp}-${sanitizedName}`;
+  //     const etag = await this.minioClient.putObject(
+  //       this.bucketName,
+  //       objectName,
+  //       file.buffer,
+  //       file.size,
+  //       { 'Content-Type': file.mimetype },
+  //     );
+
+  //     this.logger.log(
+  //       `File uploaded: ${objectName} (etag: ${JSON.stringify(etag)})`,
+  //     );
+  //     return { objectName, etag: etag.etag };
+  //   }
+
+  /**
+   * Generate a presigned download URL.
+   * Default expiry: 1 hour (3600 seconds).
+   */
   async getPresignedUrl(
     objectName: string,
     expiry: number = 3600,
@@ -69,6 +114,7 @@ export class MinioService implements OnModuleInit {
     this.logger.log(`File deleted ${objectName}`);
   }
 
+  //    list objects by their prefix
   async listFiles(prefix: string = ''): Promise<Minio.BucketItem[]> {
     return new Promise((resolve, reject) => {
       const items: Minio.BucketItem[] = [];

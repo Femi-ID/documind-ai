@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { MinioModule } from './minio/minio.module';
+import { DocumentModule } from './document/document.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MinioModule } from './minio/minio.module';
       expandVariables: true,
     }),
     MinioModule,
+    DocumentModule,
   ],
   controllers: [AppController],
   providers: [

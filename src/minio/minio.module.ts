@@ -3,13 +3,14 @@ import { MinioService } from './minio.service';
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { MINIO_TOKEN } from './decorators/minio.decorator';
+import { UsersModule } from 'src/users/users.module';
 
 @Global()
 @Module({
   providers: [
     MinioService,
     {
-      // inject: [ConfigService],
+      inject: [ConfigService],
       provide: MINIO_TOKEN,
       useFactory: (configService: ConfigService) => {
         return new Minio.Client({
@@ -22,6 +23,7 @@ import { MINIO_TOKEN } from './decorators/minio.decorator';
       },
     },
   ],
-  exports: [MINIO_TOKEN],
+  exports: [MINIO_TOKEN, MinioService],
+  imports: [UsersModule],
 })
 export class MinioModule {}

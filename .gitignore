@@ -67,3 +67,5 @@ docker-compose.override.yml
 
 nestjs-minio-file-upload-guide.md
 software-project-engineering-guide.md
+documind-upload-review-and-fixes.md
+rough.txt
