@@ -24,5 +24,6 @@ import { EmbeddingService } from './services/google-embedding.service';
     QueueModule,
     BullModule.registerQueue({ name: QUEUE.DOCUMENT_PROCESSING }),
   ],
+  exports: [DocumentService],
 })
 export class DocumentModule {}

@@ -421,6 +421,8 @@ export class DocumentService {
   }
 
   async countAllChunks() {
+    const deleteChunks = await this.prismaService.chunk.deleteMany({});
+    this.logger.log(`deleted all chunks `);
     return await this.prismaService.chunk.count();
   }
 }

@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { MinioModule } from './minio/minio.module';
 import { DocumentModule } from './document/document.module';
 import { QueueModule } from './queue/queue.module';
+import { ConversationModule } from './conversation/conversation.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { QueueModule } from './queue/queue.module';
     MinioModule,
     DocumentModule,
     QueueModule,
+    ConversationModule,
   ],
   controllers: [AppController],
   providers: [
