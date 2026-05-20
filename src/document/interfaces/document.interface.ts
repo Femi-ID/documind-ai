@@ -1,6 +1,6 @@
 import { DocumentFileType, DocumentStatus } from 'src/generated/prisma/enums';
 
-// Both interfaces not needed/used atm
+// Both interfaces CreateDocumentData and UploadDocumentResult not needed/used atm
 export interface CreateDocumentData {
   collectionId?: string;
   originalFilename: string;
@@ -23,4 +23,18 @@ export interface UploadDocumentResult {
     collectionId: string;
     downloadUrl: string;
   };
+}
+
+export interface TextChunk {
+  content: string;
+  chunkIndex: number;
+  tokenCount: number;
+  startCharOffset: number;
+  endCharOffset: number;
+}
+
+export interface DocumentProcessingJobData {
+  userId: string;
+  documentId: string;
+  s3key: string;
 }

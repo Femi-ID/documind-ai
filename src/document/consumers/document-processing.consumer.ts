@@ -1,0 +1,129 @@
+// this is a consumer for the extract-text job.
+// A consumer is a class defining methods that either process jobs added into the queue,
+// or listen for events on the queue, or both.
+
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Logger } from '@nestjs/common';
+import { Job } from 'bullmq';
+import { DocumentFileType, DocumentStatus } from 'src/generated/prisma/enums';
+import { MinioService } from 'src/minio/minio.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { DocumentProcessingJobData } from '../interfaces/document.interface';
+import { TextExtractionService } from '../services/text-extraction.service';
+import { ChunkingService } from '../services/chunking.service';
+// import { EmbeddingService } from '../services/openai-embedding.service';
+import { QUEUE } from '../constants';
+import { EmbeddingService } from '../services/google-embedding.service';
+import { DocumentService } from '../document.service';
+
+@Processor(QUEUE.DOCUMENT_PROCESSING) // name of the queue the class picks jobs from
+export class DocumentProcessingConsumer extends WorkerHost {
+  private readonly logger = new Logger(DocumentProcessingConsumer.name);
+
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly minioService: MinioService,
+    private readonly textExtractionService: TextExtractionService,
+    private readonly chunkingService: ChunkingService,
+    private readonly embeddingService: EmbeddingService,
+    private readonly documentService: DocumentService,
+  ) {
+    super();
+  }
+
+  async process(job: Job<DocumentProcessingJobData>): Promise<void> {
+    this.logger.log(
+      `Processing document ${JSON.stringify(job.data.documentId)}`,
+    );
+    const { documentId, s3key, userId } = job.data;
+
+    try {
+      // Mark as PROCESSING so the frontend can show a spinner
+      await this.prismaService.document.update({
+        where: { id: documentId },
+        data: { status: DocumentStatus.PROCESSING },
+      });
+
+      // Download file buffer from MinIO using the document's s3_key
+      const buffer = await this.minioService.getFileAsBuffer(s3key);
+      this.logger.log(`Downloaded ${buffer.length} bytes from ${s3key}`);
+      await job.updateProgress(10);
+
+      // Look for the document in the document table
+      const document = await this.prismaService.document.findUniqueOrThrow({
+        where: { id: documentId },
+        select: { file_type: true },
+      });
+
+      // Step 2: Extract text (pdf-parse for PDFs, mammoth for DOCX, raw for TXT)
+      const { text, pageCount } = await this.textExtractionService.extract(
+        buffer,
+        document.file_type as DocumentFileType,
+      );
+      await job.updateProgress(30);
+      this.logger.log(
+        `Extracted ${text.length} chars from document- ${documentId}`,
+      );
+      if (!text.trim()) {
+        throw new Error('No text could be extracted from the document');
+      }
+
+      // Step 3: Chunk the text (recursive text splitter, 512 tokens, 50 overlap)
+      const chunks = await this.chunkingService.chunkText(text);
+      await job.updateProgress(50);
+
+      // Step 4: Generate embeddings through OpenAI text-embedding-3-small
+      const chunkTexts = chunks.map((c) => c.content);
+      const embeddings =
+        await this.embeddingService.generateEmbeddings(chunkTexts);
+      await job.updateProgress(70);
+
+      // Step 5: Store chunks and vectors in the chunks table
+      const chunksWithEmbeddings = chunks.map((chunk, i) => ({
+        ...chunk,
+        embedding: embeddings[i],
+      }));
+      const insertedCount = await this.prismaService.storeChunksWithVectors(
+        documentId,
+        chunksWithEmbeddings,
+      );
+      await job.updateProgress(90);
+
+      // Step 6: Update document status to 'completed' + set total_chunks
+      await this.prismaService.document.update({
+        where: { id: documentId },
+        data: {
+          status: DocumentStatus.COMPLETED,
+          totalChunks: insertedCount,
+          pageCount: pageCount ?? null,
+        },
+      });
+      await job.updateProgress(100);
+      this.logger.log(
+        `Document ${documentId} SUCCESSFULLY processed: ${insertedCount} chunks stored`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to process document ${documentId}: ${error.message}`,
+        error.stack,
+      );
+
+      // update document status to failed
+      await this.prismaService.document.update({
+        where: { id: documentId },
+        data: {
+          status: DocumentStatus.FAILED,
+          statusMessage: error.message.slice(0, 255),
+        },
+      });
+
+      // delete the document from the both database and minIO
+      await this.documentService.deleteDocument(userId, documentId);
+      throw error;
+    }
+  }
+
+  testBullMQJob() {
+    return { msg: 'hello from DownloadDoc Consumer...' };
+  }
+}

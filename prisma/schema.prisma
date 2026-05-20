@@ -97,7 +97,8 @@ model Chunk {
   pageNumber      Int?
   startCharOffset Int
   endCharOffset   Int // which page the chunk comes from
-  embedding       Unsupported("vector(1536)")? // VECTOR(1536), nullable (populated after embedding generation; 1536 dimensions for OpenAI text-embedding-3-small)
+  // embedding       Unsupported("vector(1536)")? // VECTOR(1536), nullable (populated after embedding generation; 1536 dimensions for OpenAI text-embedding-3-small)
+  embedding       Unsupported("vector(256)")?
   metadata        Json?
 
   createdAt DateTime @default(now())

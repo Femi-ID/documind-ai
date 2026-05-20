@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { MINIO_TOKEN } from './decorators/minio.decorator';
@@ -57,38 +51,9 @@ export class MinioService implements OnModuleInit {
       size,
       { 'Content-Type': contentType, ...metadata },
     );
-    this.logger.log(`From minioService=> Uploaded: ${objectName} (etag: ${result.etag})`);
+    this.logger.log(`Uploaded: ${objectName} (etag: ${result.etag})`);
     return { objectName, etag: result.etag };
   }
-  //   async uploadFile(
-  //     file: Express.Multer.File,
-  //     folder: string = '',
-  //     userId: string,
-  //   ): Promise<{ objectName: string; etag: string }> {
-  //     const userDocumentCount = await this.usersService.UserDocumentCount(userId);
-  //     if (userDocumentCount > 50)
-  //       throw new BadRequestException(
-  //         "User's maximum document upload reached...",
-  //       );
-
-  //     const timestamp = Date.now();
-  //     const sanitizedName = file.originalname.replace(/\s+/g, '-');
-  //     const objectName = folder
-  //       ? `${folder}/${timestamp}-${sanitizedName}`
-  //       : `${timestamp}-${sanitizedName}`;
-  //     const etag = await this.minioClient.putObject(
-  //       this.bucketName,
-  //       objectName,
-  //       file.buffer,
-  //       file.size,
-  //       { 'Content-Type': file.mimetype },
-  //     );
-
-  //     this.logger.log(
-  //       `File uploaded: ${objectName} (etag: ${JSON.stringify(etag)})`,
-  //     );
-  //     return { objectName, etag: etag.etag };
-  //   }
 
   /**
    * Generate a presigned download URL.
@@ -127,5 +92,17 @@ export class MinioService implements OnModuleInit {
       stream.on('end', () => resolve(items));
       stream.on('error', (err) => reject(err));
     });
+  }
+
+  async getFileAsBuffer(objectName: string): Promise<Buffer> {
+    const stream = await this.minioClient.getObject(
+      this.bucketName,
+      objectName,
+    );
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
   }
 }

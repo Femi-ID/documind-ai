@@ -74,6 +74,9 @@ export class UsersService {
       where: { id: id },
       include: {
         collections: { select: { name: true } },
+        documents: {
+          select: { id: true, original_filename: true, totalChunks: true },
+        },
       },
     });
     if (!user) throw new NotFoundException('User not found..');

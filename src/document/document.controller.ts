@@ -30,6 +30,7 @@ export class DocumentController {
    * Upload a document. Optionally assign it to a collection.
    * If no collectionId is provided, it goes into the user's "General" collection.
    */
+  @HttpCode(HttpStatus.OK)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadDocument(
@@ -102,7 +103,7 @@ export class DocumentController {
 
   @Post('upload-documents')
   @UseInterceptors(FilesInterceptor('files'))
-  async uploadDocuments(
+  async uploadManyDocuments(
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Request() req: UserRequest,
     @Query('collectionId') collectionId?: string,
@@ -129,4 +130,19 @@ export class DocumentController {
   //     userDocumentDto,
   //   );
   // }
+
+  // @Post('bull-mq/:documentId')
+  // async extractText(
+  //   @Param('documentId') documentId: string,
+  //   @Body() s3key: string,
+  // ) {
+  //   return this.documentService.downloadDocToEmbVector_Job(documentId, s3key);
+  // }
+
+  // for logs only
+  @HttpCode(HttpStatus.OK)
+  @Get('count-chunks')
+  async countAllChunks() {
+    return await this.documentService.countAllChunks();
+  }
 }

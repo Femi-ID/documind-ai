@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { MinioModule } from './minio/minio.module';
 import { DocumentModule } from './document/document.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DocumentModule } from './document/document.module';
     }),
     MinioModule,
     DocumentModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

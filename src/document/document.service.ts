@@ -11,6 +11,9 @@ import { MinioService } from 'src/minio/minio.service';
 import { mimeToFileType } from './utils/file-type.util';
 import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { JOBS, QUEUE } from './constants';
 
 @Injectable()
 export class DocumentService {
@@ -19,7 +22,36 @@ export class DocumentService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly minioService: MinioService,
+    @InjectQueue(QUEUE.DOCUMENT_PROCESSING)
+    private readonly convertDocToEmbeddedVectorQueue: Queue,
   ) {}
+
+  private async uploadDocumentToMinioBucket(
+    buffer: Buffer,
+    s3key: string,
+    fileSize: number,
+    fileMimeType: string,
+    fileOriginalName: string,
+  ) {
+    try {
+      const uploadResult: { objectName: string; etag: string } =
+        await this.minioService.uploadFile(
+          buffer,
+          s3key,
+          fileSize,
+          fileMimeType,
+          { 'X-Original-Name': fileOriginalName },
+        );
+      this.logger.log(
+        `From documentService => document successfully uploaded to minio- etag ${uploadResult.etag}`,
+      );
+    } catch (error) {
+      this.logger.error(`Minio upload failed: ${error.message}`);
+      throw new InternalServerErrorException(
+        'File upload failed. Please try again.',
+      );
+    }
+  }
 
   async uploadDocumentToMinioAndDatabase(
     userId: string,
@@ -49,23 +81,12 @@ export class DocumentService {
     const s3key = `users/${userId}/documents/${uuidv4()}.${fileExtension}`;
 
     // upload to minIO
-    let uploadResult: { objectName: string; etag: string };
-    try {
-      uploadResult = await this.minioService.uploadFile(
-        file.buffer,
-        s3key,
-        file.size,
-        file.mimetype,
-        { 'X-Original-Name': file.originalname },
-      );
-    } catch (error) {
-      this.logger.error(`Minio upload failed: ${error.message}`);
-      throw new InternalServerErrorException(
-        'File upload failed. Please try again.',
-      );
-    }
-    this.logger.log(
-      `From documentService => document successfully uploaded to minIO- etag ${uploadResult.etag}`,
+    await this.uploadDocumentToMinioBucket(
+      file.buffer,
+      s3key,
+      file.size,
+      file.mimetype,
+      file.originalname,
     );
 
     // resolve collection- find/create 'General' collection if the user didn't specify
@@ -103,6 +124,7 @@ export class DocumentService {
     this.logger.log(
       `Document uploaded successfully: ${document.id} (${file.originalname}) for user ${userId}`,
     );
+    await this.downloadDocToEmbVector_Job(userId, document.id, document.s3_key);
 
     return {
       message: 'File uploaded successfully',
@@ -195,6 +217,11 @@ export class DocumentService {
     // if no target collection exists yet, there can't be a duplicate file
     if (!targetCollectionId) return;
 
+    const allUserDocuments = await this.prismaService.document.count({
+      where: { id: userId },
+    });
+    this.logger.log(`number of user documents: ${allUserDocuments}`);
+
     const existing = await this.prismaService.document.findFirst({
       where: {
         userId,
@@ -210,6 +237,7 @@ export class DocumentService {
     }
   }
 
+  // NOTE OPTIMIZE this function like you did with documentExists()
   private async resolveCollection(
     userId: string,
     collectionId?: string,
@@ -309,7 +337,9 @@ export class DocumentService {
     }
 
     await this.prismaService.document.delete({ where: { id: documentId } });
-    this.logger.log(`Document ${documentId} DELETED for user- ${userId}`);
+    this.logger.log(
+      `Successfully deleted the document- ${documentId} from both the database and the minio bucket.  From user- ${userId}`,
+    );
   }
 
   async deleteManyDocuments(
@@ -367,5 +397,30 @@ export class DocumentService {
         `${failedDeletes.length} document(s) failed to delete from storage.`,
       );
     }
+  }
+
+  async downloadDocToEmbVector_Job(
+    userId: string,
+    documentId: string,
+    s3key: string,
+  ) {
+    //  add a job to the queue
+    await this.convertDocToEmbeddedVectorQueue.add(
+      // name of the job to allow you to create specialized consumers that will only process jobs with a given name.
+      JOBS.DownloadExtractChunkAndEmbedDocument,
+      { documentId: documentId, s3key: s3key },
+      {
+        delay: 3000,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 1000 },
+      },
+    );
+    this.logger.log({
+      message: `Document ${documentId} processing added to Job- ${JOBS.DownloadExtractChunkAndEmbedDocument}...`,
+    });
+  }
+
+  async countAllChunks() {
+    return await this.prismaService.chunk.count();
   }
 }
