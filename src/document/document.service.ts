@@ -426,3 +426,7 @@ export class DocumentService {
     return await this.prismaService.chunk.count();
   }
 }
+
+// TODO: allow uploading of documents with images of notes.
+// TODO: create service for event listeners of jobs and queues.
+// TODO: Swagger documentation!

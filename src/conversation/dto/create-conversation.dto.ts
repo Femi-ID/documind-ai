@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class CreateConversationDto {
+export class SendMessageDto {
   @IsString()
   @IsNotEmpty()
-  collectionId: string;
+  content: string;
 
   @IsString()
-  @IsNotEmpty()
-  question: string;
+  @IsOptional()
+  collectionId?: string;
 }
