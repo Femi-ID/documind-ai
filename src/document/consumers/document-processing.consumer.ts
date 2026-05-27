@@ -141,8 +141,4 @@ export class DocumentProcessingConsumer extends WorkerHost {
       throw error;
     }
   }
-
-  testBullMQJob() {
-    return { msg: 'hello from DownloadDoc Consumer...' };
-  }
 }
