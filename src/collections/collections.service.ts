@@ -1,4 +1,4 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
