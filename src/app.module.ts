@@ -11,6 +11,7 @@ import { MinioModule } from './minio/minio.module';
 import { DocumentModule } from './document/document.module';
 import { QueueModule } from './queue/queue.module';
 import { ConversationModule } from './conversation/conversation.module';
+import { CollectionsModule } from './collections/collections.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ConversationModule } from './conversation/conversation.module';
     DocumentModule,
     QueueModule,
     ConversationModule,
+    CollectionsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -24,7 +24,7 @@ model User {
   email_verification_expires_at DateTime?
   password_reset_token          String?
   password_reset_expires_at     DateTime?
-  hashed_refresh_token            String    @default("")
+  hashed_refresh_token          String    @default("")
 
   document_count Int            @default(0)
   collections    Collection[]
@@ -88,8 +88,8 @@ enum DocumentStatus {
 }
 
 model Chunk {
-  id              String                       @id @default(uuid())
-  document        Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  id              String                      @id @default(uuid())
+  document        Document                    @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId      String
   content         String // the actual text of this chunk
   chunkIndex      Int
