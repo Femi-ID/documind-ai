@@ -13,8 +13,9 @@ import { TextExtractionService } from '../services/text-extraction.service';
 import { ChunkingService } from '../services/chunking.service';
 // import { EmbeddingService } from '../services/openai-embedding.service';
 import { QUEUE } from '../constants';
-import { EmbeddingService } from '../services/google-embedding.service';
+// import { EmbeddingService } from '../services/google-embedding.service';
 import { DocumentService } from '../document.service';
+import { EmbeddingService } from '../services/ollama-embedding.service';
 
 @Processor(QUEUE.DOCUMENT_PROCESSING) // name of the queue the class picks jobs from
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -103,6 +104,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
         `Document ${documentId} SUCCESSFULLY processed: ${insertedCount} chunks stored`,
       );
     } catch (error) {
+      // The first TWO attempts set status to FAILED and re-throw for BullMQ to retry.
+      // Attempt 3 (the final one) cleans up the document entirely so the user can re-upload.
       this.logger.error(
         `Failed to process document ${documentId}: ${error.message}`,
         error.stack,
@@ -117,8 +120,24 @@ export class DocumentProcessingConsumer extends WorkerHost {
         },
       });
 
-      // delete the document from the both database and minIO
-      await this.documentService.deleteDocument(userId, documentId);
+      // On the final attempt, delete the document from the both database and minIO
+      const maxAttempts = job.opts.attempts ?? 3;
+      if (job.attemptsMade >= maxAttempts) {
+        this.logger.warn(
+          `All ${maxAttempts} exhausted for document ${documentId}. DELETING from both database and bucket.`,
+        );
+      }
+      try {
+        await this.minioService.deleteFile(s3key);
+        await this.prismaService.document.delete({ where: { id: documentId } });
+        this.logger.log(
+          `DELETED failed document ${documentId} from DB and MinIO bucket.`,
+        );
+      } catch (cleanupErr) {
+        this.logger.log(
+          `Cleaned failed for document ${documentId}: ${cleanupErr.message}`,
+        );
+      }
       throw error;
     }
   }

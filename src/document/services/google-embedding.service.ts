@@ -53,7 +53,26 @@ export class EmbeddingService {
       );
 
       allEmbeddings.push(...batchEmbeddings);
+
+      //   adds an intentional 3 seconds pause between batches to the TPM window slide
+      if (i + this.batchSize < texts.length) {
+        this.logger.log(`Pausing to respect the embedding TPM limit...`);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
     }
     return allEmbeddings;
+  }
+
+  async generateQueryEmbedding(text: string): Promise<number[]> {
+    const result = await this.genAI.models.embedContent({
+      model: this.model,
+      contents: text,
+      config: { taskType: 'RETRIEVAL_QUERY', outputDimensionality: 256 },
+    });
+    if (!result.embeddings?.[0]?.values) {
+      throw new Error('Failed to generate query embedding.');
+    }
+    this.logger.log(`User's query embedding has been successfully generated.`);
+    return result.embeddings[0].values;
   }
 }

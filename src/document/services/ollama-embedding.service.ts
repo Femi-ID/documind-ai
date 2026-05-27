@@ -5,8 +5,7 @@ import { ConfigService } from '@nestjs/config';
 export class EmbeddingService {
   private readonly logger = new Logger(EmbeddingService.name);
   private readonly ollamaUrl: string;
-  private readonly model = 'text-embedding-3-small';
-  private readonly batchSize = 100; // since openAI allows up to 2048 per request
+  private readonly model = 'nomic-embed-text';
 
   constructor(private readonly configService: ConfigService) {
     this.ollamaUrl = this.configService.get<string>(
@@ -15,11 +14,6 @@ export class EmbeddingService {
     );
   }
 
-  /**
-   * Takes an array of text strings and returns their embedding vectors.
-   * Processes in batches to respect API limits and avoid timeouts.
-   * Returns vectors in the SAME ORDER as the input texts.
-   */
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     const embeddings: number[][] = [];
 
@@ -41,7 +35,7 @@ export class EmbeddingService {
       embeddings.push(data.embeddings[0]);
 
       // log for every 100th text
-      if ((i + 1) % 100 == 0) {
+      if ((i + 1) % 100 === 0) {
         this.logger.log(`Embedded ${i + 1}/${texts.length} chunks`);
       }
     }
@@ -49,5 +43,24 @@ export class EmbeddingService {
     this.logger.log(`Generated embeddings for ${texts.length} chunks`);
     this.logger.log(`to view the embedded chunk- ${embeddings[0][0]}`);
     return embeddings;
+  }
+
+  async generateQueryEmbeddings(text: string): Promise<number[]> {
+    const response = await fetch(`${this.ollamaUrl}/api/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: this.model,
+        input: text,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama QUERY embedding failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    this.logger.log(`User's query embedding has been successfully generated.`);
+    return data.embeddings[0];
   }
 }

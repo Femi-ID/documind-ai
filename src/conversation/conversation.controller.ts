@@ -25,11 +25,12 @@ export class ConversationController {
     sendMessageDto.collectionId = collectionId;
     return await this.conversationService.createFirstMessageAndConversation(
       req.user.id,
+      collectionId,
       sendMessageDto,
     );
   }
 
-  @Post(':conversationId/messages')
+  @Post(':conversationId/message')
   async sendMessage(
     @Request() req: UserRequest,
     @Body() sendMessageDto: SendMessageDto,

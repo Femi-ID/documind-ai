@@ -49,6 +49,14 @@ export class UsersService {
           ...remainingUserDto,
           hashed_password: argon2hashedPassword,
         },
+        select: {
+          id: true,
+          email: true,
+          full_name: true,
+          is_email_verified: true,
+          role: true,
+          createdAt: true,
+        },
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {

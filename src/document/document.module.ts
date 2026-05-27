@@ -8,7 +8,8 @@ import { DocumentProcessingConsumer } from 'src/document/consumers/document-proc
 import { QUEUE } from './constants';
 import { TextExtractionService } from './services/text-extraction.service';
 import { ChunkingService } from './services/chunking.service';
-import { EmbeddingService } from './services/google-embedding.service';
+import { EmbeddingService } from './services/ollama-embedding.service';
+// import { EmbeddingService } from './services/google-embedding.service';
 
 @Module({
   providers: [

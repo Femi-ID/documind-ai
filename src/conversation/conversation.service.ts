@@ -1,17 +1,62 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SendMessageDto } from './dto/create-conversation.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MessageRole } from 'src/generated/prisma/enums';
+// import { EmbeddingService } from 'src/document/services/google-embedding.service';
+import { VectorSearchService } from './services/vector-search.service';
+import { ContextAssemblyService } from './services/context-assembly.service';
+import { OllamaLlmService } from './services/ollama-llm.service';
+import { EmbeddingService } from 'src/document/services/ollama-embedding.service';
 
 @Injectable()
 export class ConversationService {
-  constructor(private readonly prismaService: PrismaService) {}
+  private readonly logger = new Logger(ConversationService.name);
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly embeddingService: EmbeddingService,
+    private readonly vectorSearchService: VectorSearchService,
+    private readonly contextAssemblyService: ContextAssemblyService,
+    private readonly ollamaLLMService: OllamaLlmService,
+  ) {}
 
   async createFirstMessageAndConversation(
     userId: string,
+    collectionId: string,
     sendMessageDto: SendMessageDto,
   ) {
-    // using a transaction so both queries fail or succeed together
+    //  Embed the question
+    const queryEmbedding = await this.embeddingService.generateQueryEmbeddings(
+      sendMessageDto.content,
+    );
+
+    // Vector similarity search
+    const relevantChunks = await this.vectorSearchService.findSimilarChunks(
+      queryEmbedding,
+      collectionId,
+      userId,
+    );
+
+    // Assemble the prompt
+    const { systemPrompt, userPrompt } =
+      this.contextAssemblyService.assemblePrompt(
+        sendMessageDto.content,
+        relevantChunks,
+        [], // no conversationHistory for first message
+      );
+
+    //   Generate answer
+    const llmResponse = await this.ollamaLLMService.generateAnswer(
+      systemPrompt,
+      userPrompt,
+    );
+
+    // store the conversation and messages using a transaction so ALL queries fail or succeed together
+    // TODO: write the code block for a failed transaction.
     return this.prismaService.$transaction(async (tx) => {
       //  create the conversation
       const newConversation = await tx.conversation.create({
@@ -20,12 +65,19 @@ export class ConversationService {
           collection: {
             connect: { id: sendMessageDto.collectionId },
           },
+          title: sendMessageDto.content.slice(0, 100), //using the first question as title
         },
-        select: { id: true, userId: true, collectionId: true, messages: true },
+        select: {
+          id: true,
+          userId: true,
+          collectionId: true,
+          title: true,
+          messages: true,
+        },
       });
 
-      // create the message
-      const newMessage = await tx.message.create({
+      // create the user's message
+      await tx.message.create({
         data: {
           conversation: { connect: { id: newConversation.id } },
           role: MessageRole.USER,
@@ -33,56 +85,145 @@ export class ConversationService {
         },
       });
 
-      return { newConversation, newMessage };
+      //   create the AI assistant's message with citations and metadata
+      const assistantMessage = await tx.message.create({
+        data: {
+          conversation: { connect: { id: newConversation.id } },
+          role: MessageRole.ASSISTANT,
+          content: llmResponse.content,
+          tokenUsage: llmResponse.tokenUsage,
+          model: llmResponse.model,
+          latencyMs: llmResponse.latencyMs,
+          citations: relevantChunks.map((chunk) => ({
+            chunkId: chunk.id,
+            documentId: chunk.documentId,
+            documentName: chunk.originalFilename,
+            pageNumber: chunk.pageNumber,
+            similarity: chunk.similarity,
+          })),
+        },
+      });
+
+      //   return { newConversation, userMessage, assistantMessage };
+      this.logger.log(
+        `CREATED first message in NEW conversation: ${newConversation.title}, AI response from (${assistantMessage.model}) 
+        with duration of: ${llmResponse.latencyMs} and tokenUsage: ${JSON.stringify(assistantMessage.tokenUsage)}`,
+      );
+      return {
+        conversationId: newConversation.id,
+        answer: JSON.stringify(assistantMessage.content),
+        citations: assistantMessage.citations,
+        tokenUsage: assistantMessage.tokenUsage,
+        model: llmResponse.model,
+        latencyMs: llmResponse.latencyMs,
+      };
     });
   }
 
+  /**send a message to a conversation with history. */
   async createMessage(
     userId: string,
     sendMessageDto: SendMessageDto,
     conversationId: string,
   ) {
-    const userOwnsConversation =
-      await this.prismaService.conversation.findFirst({
-        where: { userId: userId, id: conversationId, isActive: true },
-      });
+    // confirm user owns the conversation
+    const conversation = await this.prismaService.conversation.findFirst({
+      where: { userId, id: conversationId, isActive: true },
+      select: {
+        id: true,
+        collectionId: true,
+        messages: {
+          orderBy: { createdAt: 'asc' }, // meaning the latest message first?
+          select: { role: true, content: true },
+          take: 10, // fetch last 10 messages for context
+        },
+      },
+    });
 
-    if (userOwnsConversation) {
-      // create the message
-      const message = await this.prismaService.message.create({
+    if (!conversation) {
+      throw new UnauthorizedException(
+        `User with id- (${userId}) is not permitted to send messages to this conversation`,
+      );
+    }
+
+    //  Embed the user's question
+    const queryEmbedding = await this.embeddingService.generateQueryEmbeddings(
+      sendMessageDto.content,
+    );
+
+    // Vector similarity search scoped to the conversation's collection
+    const relevantChunks = await this.vectorSearchService.findSimilarChunks(
+      queryEmbedding,
+      conversation.collectionId,
+      userId,
+    );
+
+    // Assemble the user's and system's prompt with Conversation History
+    const conversationHistory = conversation.messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    const { systemPrompt, userPrompt } =
+      this.contextAssemblyService.assemblePrompt(
+        sendMessageDto.content,
+        relevantChunks,
+        conversationHistory,
+      );
+
+    //   generate answer
+    const llmResponse = await this.ollamaLLMService.generateAnswer(
+      systemPrompt,
+      userPrompt,
+    );
+
+    //  store both user and AI assistant messages
+    return this.prismaService.$transaction(async (tx) => {
+      await tx.message.create({
         data: {
           conversation: { connect: { id: conversationId } },
           role: MessageRole.USER,
           content: sendMessageDto.content,
         },
       });
-      return message;
-    } else {
-      throw new UnauthorizedException(
-        `User with id- (${userId}) is not permitted to send messages to this conversation`,
-      );
-    }
+
+      const assistantMessage = await tx.message.create({
+        data: {
+          conversation: { connect: { id: conversationId } },
+          role: MessageRole.ASSISTANT,
+          content: llmResponse.content,
+          model: llmResponse.model,
+          latencyMs: llmResponse.latencyMs,
+          tokenUsage: llmResponse.tokenUsage ?? undefined,
+          citations: relevantChunks.map((chunk) => ({
+            chunkId: chunk.id,
+            documentId: chunk.documentId,
+            documentName: chunk.originalFilename,
+            pageNumber: chunk.pageNumber,
+            similarity: chunk.similarity,
+          })),
+        },
+      });
+
+      // update the conversation's updatedAt so it sorts to the top
+      await tx.conversation.update({
+        where: { id: conversation.id },
+        data: { updatedAt: new Date() },
+      });
+
+      return {
+        conversationId,
+        answer: assistantMessage.content,
+        citations: assistantMessage.citations,
+        model: llmResponse.model,
+        latencyMs: llmResponse.latencyMs,
+      };
+    });
   }
 
   async listConversations(userId: string, collectionId?: string) {
-    // const conversations =
-    //   (await this.prismaService.conversation.findMany({
-    //     where: { userId: userId, collectionId: collectionId },
-    //   })) ??
-    //   (await this.prismaService.conversation.findMany({
-    //     where: { userId: userId },
-    //   }));
-
-    // const conversations = collectionId
-    //   ? await this.prismaService.conversation.findMany({
-    //       where: { userId: userId, collectionId: collectionId, isActive: true },
-    //       select: { id: true, title: true, isActive: true },
-    //     })
-    //   : await this.prismaService.conversation.findMany({
-    //       where: { userId: userId, isActive: true },
-    //       select: { id: true, title: true, isActive: true },
-    //     });
-    const where: any = { userId, isActive: true };
+    const where: { userId: string; isActive: boolean; collectionId?: string } =
+      { userId, isActive: true };
     if (collectionId) {
       where.collectionId = collectionId;
     }
@@ -121,23 +262,23 @@ export class ConversationService {
     });
 
     if (!conversation) {
-    throw new BadRequestException('Conversation not found.');
-  }
-  return conversation;
+      throw new BadRequestException('Conversation not found.');
+    }
+    return conversation;
   }
 
   async deleteConversation(userId: string, conversationId: string) {
-    // CAN A CRON JOB BE USED TO DELETE THIS CONVERSATION AFTER A WEEK
-    // await this.prismaService.conversation.delete({
+    // return await this.prismaService.conversation.update({
     //   where: { id: conversationId, userId: userId },
+    //   data: { isActive: false },
+    //   select: { id: true, userId: true, isActive: true, updatedAt: true },
     // });
 
-    return await this.prismaService.conversation.update({
+    return await this.prismaService.conversation.delete({
       where: { id: conversationId, userId: userId },
-      data: { isActive: false },
-      select: { id: true, userId: true, isActive: true, updatedAt: true },
     });
+    // CAN A CRON JOB BE USED TO DELETE THIS CONVERSATION AFTER A WEEK version2 probably.
   }
 }
 
-// Should there be a delete message option
+// Should there be a delete message service
