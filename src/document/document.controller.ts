@@ -20,16 +20,24 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import type { UserRequest } from 'src/auth/types/request.interface';
 import { DocumentService } from './document.service';
+import { SkipThrottle } from '@nestjs/throttler';
+import { CustomThrottlers } from 'src/common/constants/custom-throttlers.constant';
 
 @Controller('document')
 export class DocumentController {
   private readonly logger = new Logger(DocumentController.name);
+
   constructor(private readonly documentService: DocumentService) {}
 
   /**
    * Upload a document. Optionally assign it to a collection.
    * If no collectionId is provided, it goes into the user's "General" collection.
    */
+  @SkipThrottle({
+    [CustomThrottlers.DEFAULT]: true, // this bypasses the global DEFAULT throttler
+    [CustomThrottlers.MODERATE]: false, // wakes up the moderate throttler with the same setting set in app.module.ts
+  })
+  // @Throttle({ [CustomThrottlers.MODERATE]: { ttl: minutes(1), limit: 20 } }) // 20 requests per minute
   @HttpCode(HttpStatus.OK)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
@@ -101,6 +109,10 @@ export class DocumentController {
     );
   }
 
+  @SkipThrottle({
+    [CustomThrottlers.DEFAULT]: true, // this bypasses the global DEFAULT throttler
+    [CustomThrottlers.MODERATE]: false, // wakes up the MODERATE throttler with the same setting set in app.module.ts
+  })
   @Post('upload-documents')
   @UseInterceptors(FilesInterceptor('files'))
   async uploadManyDocuments(
@@ -119,30 +131,5 @@ export class DocumentController {
       ),
     );
     return results;
-  }
-
-  // async createUserDocument(
-  //   userId: string,
-  //   userDocumentDto: CreateUserDocumentDto,
-  // ) {
-  //   return await this.documentService.createUserDocument(
-  //     userId,
-  //     userDocumentDto,
-  //   );
-  // }
-
-  // @Post('bull-mq/:documentId')
-  // async extractText(
-  //   @Param('documentId') documentId: string,
-  //   @Body() s3key: string,
-  // ) {
-  //   return this.documentService.downloadDocToEmbVector_Job(documentId, s3key);
-  // }
-
-  // for logs only
-  @HttpCode(HttpStatus.OK)
-  @Get('count-chunks')
-  async countAllChunks() {
-    return await this.documentService.countAllChunks();
   }
 }
