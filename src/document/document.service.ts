@@ -419,12 +419,6 @@ export class DocumentService {
       message: `Document ${documentId} processing added to Job- ${JOBS.DownloadExtractChunkAndEmbedDocument}...`,
     });
   }
-
-  async countAllChunks() {
-    const deleteChunks = await this.prismaService.chunk.deleteMany({});
-    this.logger.log(`deleted all chunks `);
-    return await this.prismaService.chunk.count();
-  }
 }
 
 // TODO: allow uploading of documents with images of notes.

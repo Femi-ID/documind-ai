@@ -11,7 +11,14 @@ import type { UserRequest } from './types/request.interface';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Public } from './decorators/public.decorators';
 import { RefreshAuthGuard } from './guards/refresh-auth.guard';
+import { SkipThrottle } from '@nestjs/throttler';
+import { CustomThrottlers } from 'src/common/constants/custom-throttlers.constant';
 
+// @Throttle({ default: { ttl: seconds(60), limit: 10 } }) // 10 requests per minute
+@SkipThrottle({
+  [CustomThrottlers.DEFAULT]: true, //sets DEFAULT off
+  [CustomThrottlers.STRICT]: false, // wakes up STRICT throttler with default settings.
+})
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
