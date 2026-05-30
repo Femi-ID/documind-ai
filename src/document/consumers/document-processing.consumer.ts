@@ -16,6 +16,7 @@ import { QUEUE } from '../constants';
 // import { EmbeddingService } from '../services/google-embedding.service';
 import { DocumentService } from '../document.service';
 import { EmbeddingService } from '../services/ollama-embedding.service';
+import { QueryCacheService } from 'src/query-cache/query-cache.service';
 
 @Processor(QUEUE.DOCUMENT_PROCESSING) // name of the queue the class picks jobs from
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -28,6 +29,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly chunkingService: ChunkingService,
     private readonly embeddingService: EmbeddingService,
     private readonly documentService: DocumentService,
+    private readonly queryCacheService: QueryCacheService,
   ) {
     super();
   }
@@ -53,7 +55,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       // Look for the document in the document table
       const document = await this.prismaService.document.findUniqueOrThrow({
         where: { id: documentId },
-        select: { file_type: true },
+        select: { file_type: true, collectionId: true },
       });
 
       // Step 2: Extract text (pdf-parse for PDFs, mammoth for DOCX, raw for TXT)
@@ -102,6 +104,11 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await job.updateProgress(100);
       this.logger.log(
         `Document ${documentId} SUCCESSFULLY processed: ${insertedCount} chunks stored`,
+      );
+
+      await this.queryCacheService.invalidateCollection(document.collectionId);
+      this.logger.log(
+        `Invalidated quey cache for collection: ${document.collectionId}`,
       );
     } catch (error) {
       // The first TWO attempts set status to FAILED and re-throw for BullMQ to retry.

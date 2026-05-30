@@ -9,6 +9,7 @@ import { QUEUE } from './constants';
 import { TextExtractionService } from './services/text-extraction.service';
 import { ChunkingService } from './services/chunking.service';
 import { EmbeddingService } from './services/ollama-embedding.service';
+import { QueryCacheService } from 'src/query-cache/query-cache.service';
 // import { EmbeddingService } from './services/google-embedding.service';
 
 @Module({
@@ -18,6 +19,7 @@ import { EmbeddingService } from './services/ollama-embedding.service';
     TextExtractionService,
     ChunkingService,
     EmbeddingService,
+    QueryCacheService,
   ],
   controllers: [DocumentController],
   imports: [

@@ -12,9 +12,7 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     const { context, throttler } = requestProps;
 
     const throttlerName = throttler.name;
-    this.logger.debug(
-      `handleRequest called for: ${throttlerName}`,
-    );
+    this.logger.debug(`handleRequest called for: ${throttlerName}`);
     if (!throttlerName) {
       return super.handleRequest(requestProps);
     }

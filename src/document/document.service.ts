@@ -14,6 +14,7 @@ import { createHash } from 'crypto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { JOBS, QUEUE } from './constants';
+import { QueryCacheService } from 'src/query-cache/query-cache.service';
 
 @Injectable()
 export class DocumentService {
@@ -24,6 +25,7 @@ export class DocumentService {
     private readonly minioService: MinioService,
     @InjectQueue(QUEUE.DOCUMENT_PROCESSING)
     private readonly convertDocToEmbeddedVectorQueue: Queue,
+    private readonly queryCacheService: QueryCacheService,
   ) {}
 
   private async uploadDocumentToMinioBucket(
@@ -336,6 +338,11 @@ export class DocumentService {
       );
     }
 
+    await this.queryCacheService.invalidateCollection(document.collectionId);
+    this.logger.log(
+      `Invalidated query cache for collection: ${document.collectionId}`,
+    );
+
     await this.prismaService.document.delete({ where: { id: documentId } });
     this.logger.log(
       `Successfully deleted the document- ${documentId} from both the database and the minio bucket.  From user- ${userId}`,
@@ -353,7 +360,7 @@ export class DocumentService {
 
     const documents = await this.prismaService.document.findMany({
       where,
-      select: { id: true, s3_key: true },
+      select: { id: true, s3_key: true, collectionId: true },
     });
 
     if (!documents?.length) {
@@ -383,6 +390,18 @@ export class DocumentService {
       .map((doc) => doc.id);
 
     if (successfulIds.length) {
+      await Promise.all(
+        documents
+          .filter((doc) => successfulIds.includes(doc.id))
+          .map(
+            (doc) =>
+              this.queryCacheService.invalidateCollection(doc.collectionId),
+            this.logger.log(
+              `Invalidated query cache for collection: ${doc.collectionId}`,
+            ),
+          ),
+      );
+
       await this.prismaService.document.deleteMany({
         where: { id: { in: successfulIds } },
       });

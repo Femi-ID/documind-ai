@@ -17,6 +17,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
 import Redis from 'ioredis';
 import { CustomThrottlers } from './common/constants/custom-throttlers.constant';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
+import { QueryCacheModule } from './query-cache/query-cache.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
     QueueModule,
     ConversationModule,
     CollectionsModule,
+    QueryCacheModule,
   ],
   controllers: [AppController],
   providers: [

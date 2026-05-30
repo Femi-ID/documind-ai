@@ -12,6 +12,7 @@ import { VectorSearchService } from './services/vector-search.service';
 import { ContextAssemblyService } from './services/context-assembly.service';
 import { OllamaLlmService } from './services/ollama-llm.service';
 import { EmbeddingService } from 'src/document/services/ollama-embedding.service';
+import { QueryCacheService } from 'src/query-cache/query-cache.service';
 
 @Injectable()
 export class ConversationService {
@@ -22,6 +23,7 @@ export class ConversationService {
     private readonly vectorSearchService: VectorSearchService,
     private readonly contextAssemblyService: ContextAssemblyService,
     private readonly ollamaLLMService: OllamaLlmService,
+    private readonly queryCacheService: QueryCacheService,
   ) {}
 
   async createFirstMessageAndConversation(
