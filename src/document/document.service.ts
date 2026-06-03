@@ -389,22 +389,30 @@ export class DocumentService {
       .filter((doc) => !failedDeletes.includes(doc.id))
       .map((doc) => doc.id);
 
+    // filter only the successfully deleted minIO docs into affectedCollections array
     if (successfulIds.length) {
-      await Promise.all(
-        documents
-          .filter((doc) => successfulIds.includes(doc.id))
-          .map(
-            (doc) =>
-              this.queryCacheService.invalidateCollection(doc.collectionId),
-            this.logger.log(
-              `Invalidated query cache for collection: ${doc.collectionId}`,
-            ),
-          ),
-      );
+      const affectedCollectionId = [
+        ...new Set(
+          documents
+            .filter((doc) => successfulIds.includes(doc.id))
+            .map((doc) => doc.collectionId),
+        ),
+      ];
 
+      // delete from DB
       await this.prismaService.document.deleteMany({
         where: { id: { in: successfulIds } },
       });
+
+      // invalidate ONCE per affected collection
+      await Promise.all(
+        affectedCollectionId.map((collectionId) => {
+          this.logger.log(
+            `Invalidated query cache for collection: ${collectionId}`,
+          );
+          return this.queryCacheService.invalidateCollection(collectionId);
+        }),
+      );
     }
 
     this.logger.log(

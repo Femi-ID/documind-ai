@@ -18,11 +18,37 @@ export class QueryCacheService {
   constructor(private readonly configService: ConfigService) {
     this.redis = new Redis({
       host: this.configService.get<string>('REDIS_HOST'),
-      port: this.configService.get<number>('REDIS_PORT'),
+      port: parseInt(String(this.configService.get<number>('REDIS_PORT')), 10),
     });
-    this.ttlSeconds = this.configService.get<number>('QUEUE_CACHE_TTL', 3600); // default- 1hr
+    this.ttlSeconds = parseInt(
+      String(this.configService.get<number>('QUEUE_CACHE_TTL', 3600)),
+      10,
+    ); // default- 1hr
     this.isEnabled =
-      this.configService.get<string>('QUEUE_CACHE_ENABLED') === 'true'; // kill switch, disable caching without changing code
+      this.configService.get<string>('QUEUE_CACHE_ENABLED', 'true') === 'true'; // kill switch, disable caching without changing code
+
+    this.logger.log(
+      `Initialized — enabled: ${this.isEnabled}, TTL: ${this.ttlSeconds}s`,
+    );
+  }
+
+  async onModuleInit() {
+    try {
+      const pong = await this.redis.ping();
+      this.logger.log(`Redis connection verified: ${pong}`);
+
+      // Quick write/read test to confirm operations work
+      await this.redis.set('qa_cache:health_check', 'ok', 'EX', 10);
+      const check = await this.redis.get('qa_cache:health_check');
+      this.logger.log(
+        `Redis read/write test: ${check === 'ok' ? 'PASSED' : 'FAILED'}`,
+      );
+    } catch (error) {
+      this.logger.error(`Redis connection FAILED: ${error.message}`);
+      this.logger.error(
+        'Query caching will not work — all requests will run the full RAG pipeline',
+      );
+    }
   }
 
   /**
@@ -35,14 +61,18 @@ export class QueryCacheService {
     collectionId: string,
     question: string,
   ): Promise<CachedAnswer | null> {
-    if (!this.isEnabled) return null;
+    if (!this.isEnabled) {
+      this.logger.log('Cache is DISABLED via env — skipping');
+      return null;
+    }
 
     try {
       const cacheKey = await this.buildCacheKey(collectionId, question);
+      this.logger.log(`LOOKUP - key: ${cacheKey}`);
       const cached = await this.redis.get(cacheKey);
 
       if (!cached) {
-        this.logger.debug(`Cache MISS for collection: ${collectionId}`);
+        this.logger.log(`Cache MISS for collection: ${collectionId}`);
         return null;
       }
 
@@ -50,7 +80,7 @@ export class QueryCacheService {
       return JSON.parse(cached) as CachedAnswer;
     } catch (error) {
       // the cache error MUST not break the RAG pipeline, if redis is down skip and continue the full pipeline.
-      this.logger.warn(`Cache read failed: ${error.message}`);
+      this.logger.error(`Cache read FAILED: ${error.message}`);
       return null;
     }
   }
@@ -65,11 +95,11 @@ export class QueryCacheService {
 
     try {
       const cacheKey = await this.buildCacheKey(collectionId, question);
-      answer.cachedAt = new Date().toISOString();
+      answer.cachedAt = new Date().toISOString(); //override it to user current date
 
       await this.redis.setex(cacheKey, this.ttlSeconds, JSON.stringify(answer));
       this.logger.log(
-        `Cached answer for collection ${collectionId} (TTL: ${this.ttlSeconds}s)`,
+        `CACHED answer for collection ${collectionId} (TTL: ${this.ttlSeconds}s)`,
       );
     } catch (error) {
       this.logger.warn(`Cache write failed: ${error.message}`);
@@ -92,10 +122,10 @@ export class QueryCacheService {
       const newVersion = await this.redis.incr(versionKey);
 
       this.logger.log(
-        `Invalidated cache for collection ${collectionId} (new doc_version: ${newVersion})`,
+        `INVALIDATED cache for collection ${collectionId} (new doc_version: ${newVersion})`,
       );
     } catch (error) {
-      this.logger.warn(`Cache invalidation failed: ${error.message}`);
+      this.logger.warn(`Cache invalidation FAILED: ${error.message}`);
     }
   }
 

@@ -12,7 +12,7 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     const { context, throttler } = requestProps;
 
     const throttlerName = throttler.name;
-    this.logger.debug(`handleRequest called for: ${throttlerName}`);
+    // this.logger.debug(`handleRequest called for: ${throttlerName}`);
     if (!throttlerName) {
       return super.handleRequest(requestProps);
     }
@@ -39,20 +39,20 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
         classRef,
       ]) === false;
 
-    this.logger.debug(`[CustomThrottlerGuard] hasCustomLimit:`, hasCustomLimit);
-    this.logger.debug(
-      `[CustomThrottlerGuard] explicitlyUnskipped:`,
-      explicitlyUnskipped,
-    );
+    // this.logger.debug(`[CustomThrottlerGuard] hasCustomLimit:`, hasCustomLimit);
+    // this.logger.debug(
+    //   `[CustomThrottlerGuard] explicitlyUnskipped:`,
+    //   explicitlyUnskipped,
+    // );
 
     // If it wasn't explicitly invoked on this route, bypass it by returning true
     if (!hasCustomLimit && !explicitlyUnskipped) {
       return true;
     }
 
-    this.logger.debug(
-      `[CustomThrottlerGuard] APPLYING rate limit for ${throttlerName}`,
-    );
+    // this.logger.debug(
+    //   `[CustomThrottlerGuard] APPLYING rate limit for ${throttlerName}`,
+    // );
     return super.handleRequest(requestProps);
   }
 }
