@@ -12,6 +12,7 @@ import { VectorSearchService } from './services/vector-search.service';
 import { ContextAssemblyService } from './services/context-assembly.service';
 import { OllamaLlmService } from './services/ollama-llm.service';
 import { EmbeddingService } from 'src/document/services/ollama-embedding.service';
+import { QueryCacheService } from 'src/query-cache/query-cache.service';
 
 @Injectable()
 export class ConversationService {
@@ -22,6 +23,7 @@ export class ConversationService {
     private readonly vectorSearchService: VectorSearchService,
     private readonly contextAssemblyService: ContextAssemblyService,
     private readonly ollamaLLMService: OllamaLlmService,
+    private readonly queryCacheService: QueryCacheService,
   ) {}
 
   async createFirstMessageAndConversation(
@@ -29,31 +31,97 @@ export class ConversationService {
     collectionId: string,
     sendMessageDto: SendMessageDto,
   ) {
-    //  Embed the question
-    const queryEmbedding = await this.embeddingService.generateQueryEmbeddings(
+    let answerContent: string;
+    let citations: Array<{
+      chunkId: string;
+      documentId: string;
+      documentName: string;
+      pageNumber: number | null;
+      similarity: number;
+    }>;
+    let model: string;
+    let tokenUsage: any;
+    let latencyMs: any;
+    let isCached = false;
+
+    // check cache BEFORE running the expensive RAG pipeline
+    const cachedAnswer = await this.queryCacheService.getCachedAnswer(
+      collectionId,
       sendMessageDto.content,
     );
 
-    // Vector similarity search
-    const relevantChunks = await this.vectorSearchService.findSimilarChunks(
-      queryEmbedding,
-      collectionId,
-      userId,
-    );
-
-    // Assemble the prompt
-    const { systemPrompt, userPrompt } =
-      this.contextAssemblyService.assemblePrompt(
-        sendMessageDto.content,
-        relevantChunks,
-        [], // no conversationHistory for first message
+    if (cachedAnswer) {
+      this.logger.log(
+        `Cache HIT for collection ${collectionId} - skipping RAG pipeline`,
+      );
+      answerContent = cachedAnswer.answer;
+      citations = cachedAnswer.citations;
+      model = cachedAnswer.model;
+      tokenUsage = cachedAnswer.tokenUsage;
+      latencyMs = 0; // no LLM call was made
+      isCached = true;
+    } else {
+      this.logger.log(
+        `Cache MISS for collection: ${collectionId} - running full RAG pipeline.`,
       );
 
-    //   Generate answer
-    const llmResponse = await this.ollamaLLMService.generateAnswer(
-      systemPrompt,
-      userPrompt,
-    );
+      //  Embed the question
+      const queryEmbedding =
+        await this.embeddingService.generateQueryEmbeddings(
+          sendMessageDto.content,
+        );
+
+      // Vector similarity search
+      const relevantChunks = await this.vectorSearchService.findSimilarChunks(
+        queryEmbedding,
+        collectionId,
+        userId,
+      );
+
+      // Assemble the prompt
+      const { systemPrompt, userPrompt } =
+        this.contextAssemblyService.assemblePrompt(
+          sendMessageDto.content,
+          relevantChunks,
+          [], // no conversationHistory for first message
+        );
+
+      //   Generate answer
+      const llmResponse = await this.ollamaLLMService.generateAnswer(
+        systemPrompt,
+        userPrompt,
+      );
+
+      // updated these variable so they can be used in creating new convo and message
+      // Map the citations into the format we store in the DB
+      // IMPORTANT: map BEFORE caching so the cached version has the same structure as what goes into the assistant message
+      citations = relevantChunks.map((chunk) => ({
+        chunkId: chunk.id,
+        documentId: chunk.documentId,
+        documentName: chunk.originalFilename,
+        pageNumber: chunk.pageNumber,
+        similarity: chunk.similarity,
+      }));
+
+      answerContent = llmResponse.content;
+      model = llmResponse.model;
+      tokenUsage = llmResponse.tokenUsage;
+      latencyMs = llmResponse.latencyMs;
+
+      // store the answer in redis cache
+      await this.queryCacheService.cacheAnswer(
+        collectionId,
+        sendMessageDto.content,
+        {
+          answer: answerContent,
+          citations,
+          model,
+          tokenUsage,
+          latencyMs,
+          cachedAt: '', // will be set by cacheAnswer()
+        },
+      );
+    }
 
     // store the conversation and messages using a transaction so ALL queries fail or succeed together
     // TODO: write the code block for a failed transaction.
@@ -65,7 +133,7 @@ export class ConversationService {
           collection: {
             connect: { id: sendMessageDto.collectionId },
           },
-          title: sendMessageDto.content.slice(0, 100), //using the first question as title
+          title: sendMessageDto.content.slice(0, 100), // using the first question as title
         },
         select: {
           id: true,
@@ -90,32 +158,28 @@ export class ConversationService {
         data: {
           conversation: { connect: { id: newConversation.id } },
           role: MessageRole.ASSISTANT,
-          content: llmResponse.content,
-          tokenUsage: llmResponse.tokenUsage,
-          model: llmResponse.model,
-          latencyMs: llmResponse.latencyMs,
-          citations: relevantChunks.map((chunk) => ({
-            chunkId: chunk.id,
-            documentId: chunk.documentId,
-            documentName: chunk.originalFilename,
-            pageNumber: chunk.pageNumber,
-            similarity: chunk.similarity,
-          })),
+          content: answerContent,
+          tokenUsage: tokenUsage,
+          model: model,
+          latencyMs: latencyMs,
+          citations: citations,
         },
       });
 
       //   return { newConversation, userMessage, assistantMessage };
       this.logger.log(
         `CREATED first message in NEW conversation: ${newConversation.title}, AI response from (${assistantMessage.model}) 
-        with duration of: ${llmResponse.latencyMs} and tokenUsage: ${JSON.stringify(assistantMessage.tokenUsage)}`,
+        with duration of: ${latencyMs} and tokenUsage: ${JSON.stringify(assistantMessage.tokenUsage)}`,
       );
       return {
         conversationId: newConversation.id,
-        answer: JSON.stringify(assistantMessage.content),
+        // answer: JSON.stringify(assistantMessage.content),
+        answer: assistantMessage.content,
         citations: assistantMessage.citations,
         tokenUsage: assistantMessage.tokenUsage,
-        model: llmResponse.model,
-        latencyMs: llmResponse.latencyMs,
+        model: assistantMessage.model,
+        latencyMs: latencyMs,
+        cached: isCached,
       };
     });
   }

@@ -6,6 +6,7 @@ import { VectorSearchService } from './services/vector-search.service';
 import { ContextAssemblyService } from './services/context-assembly.service';
 import { GoogleLlmService } from './services/google-llm.service';
 import { OllamaLlmService } from './services/ollama-llm.service';
+import { QueryCacheService } from 'src/query-cache/query-cache.service';
 
 @Module({
   providers: [
@@ -14,6 +15,7 @@ import { OllamaLlmService } from './services/ollama-llm.service';
     ContextAssemblyService,
     GoogleLlmService,
     OllamaLlmService,
+    QueryCacheService,
   ],
   controllers: [ConversationController],
   imports: [DocumentModule],
