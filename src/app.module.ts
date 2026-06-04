@@ -18,6 +18,8 @@ import Redis from 'ioredis';
 import { CustomThrottlers } from './common/constants/custom-throttlers.constant';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { QueryCacheModule } from './query-cache/query-cache.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -64,6 +66,8 @@ import { QueryCacheModule } from './query-cache/query-cache.module';
     ConversationModule,
     CollectionsModule,
     QueryCacheModule,
+    MetricsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
