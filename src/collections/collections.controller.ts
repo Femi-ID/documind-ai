@@ -13,11 +13,27 @@ import { CollectionsService } from './collections.service';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import type { UserRequest } from 'src/auth/types/request.interface';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
-@Controller('collections')
+@ApiTags('Collections')
+@ApiBearerAuth('access-token')
+@Controller({ version: '1', path: 'collections' })
 export class CollectionsController {
   constructor(private readonly collectionsService: CollectionsService) {}
 
+  @ApiOperation({ summary: 'Create a new document collection' })
+  @ApiResponse({ status: 201, description: 'Collection created' })
+  @ApiResponse({
+    status: 409,
+    description: 'Collection name already exists for this user',
+  })
   @Post('create')
   async createCollection(
     @Request() req: UserRequest,
@@ -29,6 +45,16 @@ export class CollectionsController {
     );
   }
 
+  @ApiOperation({
+    summary:
+      'List all collections, or get a single collection with its conversations',
+  })
+  @ApiQuery({
+    name: 'collectionId',
+    required: false,
+    description: 'Get a specific collection by ID',
+  })
+  @ApiResponse({ status: 200, description: 'Returns collections' })
   @Get()
   async getCollections(
     @Request() req: UserRequest,
@@ -40,6 +66,13 @@ export class CollectionsController {
     );
   }
 
+  @ApiOperation({ summary: 'Update a collection name or description' })
+  @ApiParam({
+    name: 'collectionId',
+    description: 'Collection ID',
+    format: 'uuid',
+  })
+  @ApiResponse({ status: 200, description: 'Collection updated' })
   @Put(':collectionId')
   async updateCollection(
     @Request() req: UserRequest,
@@ -53,6 +86,18 @@ export class CollectionsController {
     );
   }
 
+  @ApiOperation({
+    summary: 'Delete a collection and all its documents with chunks',
+  })
+  @ApiParam({
+    name: 'collectionId',
+    description: 'Collection ID',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Collection and associated documents deleted',
+  })
   @Delete(':collectionId')
   async deleteCollection(
     @Param('collectionId') collectionId: string,

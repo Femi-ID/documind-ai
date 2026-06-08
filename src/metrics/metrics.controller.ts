@@ -1,9 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
 import { SkipThrottle } from '@nestjs/throttler';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @SkipThrottle()
-@Controller('metrics')
+@ApiTags('System')
+@Controller({ version: '1', path: 'metrics' })
 export class MetricsController {
   constructor(private readonly metricService: MetricsService) {}
 
@@ -21,6 +23,10 @@ export class MetricsController {
    * Redis counters or a time-series DB, but for a portfolio project
    * live queries are simpler and sufficient.
    */
+  @ApiOperation({
+    summary: 'Platform metrics (queue, documents, users, cache)',
+  })
+  @ApiResponse({ status: 200, description: 'Returns operational metrics' })
   @Get()
   async getMetrics() {
     return this.metricService.collectMetrics();
