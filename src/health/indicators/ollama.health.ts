@@ -25,7 +25,8 @@ export class OllamaHealthIndicator {
       });
 
       if (!response.ok) {
-        return indicator.down({ status: response.status });
+        // return indicator.down({ status: response.status });
+        return indicator.down();
       }
 
       return indicator.up({ url: this.ollamaUrl });
