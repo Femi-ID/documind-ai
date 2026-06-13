@@ -2,7 +2,9 @@ import { Controller, Get } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorators';
 
+@Public()
 @SkipThrottle()
 @ApiTags('System')
 @Controller({ version: '1', path: 'metrics' })

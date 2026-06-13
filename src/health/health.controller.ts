@@ -10,7 +10,9 @@ import { MinioHealthIndicator } from './indicators/minio.health';
 import { OllamaHealthIndicator } from './indicators/ollama.health';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorators';
 
+@Public()
 @SkipThrottle()
 @ApiTags('System')
 @Controller({ version: '1', path: 'health' })
