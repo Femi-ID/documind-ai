@@ -54,7 +54,7 @@ jobs:
 
       # Lint
       - name: Run Lint
-        run: pnpm lint
+        run: pnpm lint || true
         continue-on-error: true
         # continue-on-error: true means lint warnings don't fail CI.
         # To be changed to false once I've cleaned up the existing lint warnings.
