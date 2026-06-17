@@ -97,6 +97,25 @@ export class PromptInjectionGuard implements CanActivate {
       category: 'jailbreak',
       description: 'DAN jailbreak pattern',
     },
+    // Additional patterns to protect against common attacks:
+    {
+      pattern:
+        /\b(show|display|print|reveal|output)\s+(me\s+)?(your|the)\s+(system\s+)?(prompt|instructions)\b/i,
+      category: 'prompt_extraction',
+      description: 'Attempt to display system prompt',
+    },
+
+    // Add to jailbreak category:
+    {
+      pattern: /\bDAN\s+mode\b/i,
+      category: 'jailbreak',
+      description: 'DAN jailbreak technique',
+    },
+    {
+      pattern: /\bdeveloper\s+mode\b/i,
+      category: 'jailbreak',
+      description: 'Developer mode jailbreak',
+    },
   ];
 
   canActivate(context: ExecutionContext): boolean {

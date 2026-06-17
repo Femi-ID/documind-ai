@@ -1,0 +1,90 @@
+# CI workflow that runs on every push and pull request.
+#
+# What it does:
+# 1. Checks out the code
+# 2. Installs pnpm and dependencies (with caching)
+# 3. Generates the Prisma client
+# 4. Runs lint
+# 5. Builds the project (type-check + compile)
+# 6. Runs unit tests with coverage
+# 7. Uploads coverage report as an artifact (downloadable from Actions UI)
+#
+# What it does NOT do (intentionally):
+# - Run integration tests (blocked on the Jest+ESM+Prisma 7 issue
+#   I've documented; they're scaffolded but not executable in CI)
+
+name: CI
+
+on:
+  push:
+    branches: [master, dev]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    name: Lint, Build, Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # setup pnpm
+      # pnpm/action-setup is used here to match the local version
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # setup Node.js with pnpm cache
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Generate prisma client which is required before typescript compilation can succeed
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      # Lint
+      - name: Run Lint
+        run: pnpm lint
+        continue-on-error: true
+        # continue-on-error: true means lint warnings don't fail CI.
+        # To be changed to false once I've cleaned up the existing lint warnings.
+
+      # Build
+      - name: Build
+        run: pnpm build
+
+      # unit tests with coverage
+      - name: Run unit tests
+        run: pnpm test:cov:unit
+        env:
+          NODE_ENV: test
+
+      # Upload coverage report
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always() # upload even if tests failed
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+      #  Posts a coverage summary directly on the PR. Recruiters who
+      # look at your PR history will see green coverage badges.
+      - name: Coverage Report Summary
+        if: github.event_name == 'pull_request'
+        uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          test-script: pnpm test:cov:unit
+          coverage-file: ./coverage/coverage-final.json
+        continue-on-error: true
