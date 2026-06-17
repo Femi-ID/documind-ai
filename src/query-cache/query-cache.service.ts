@@ -21,11 +21,11 @@ export class QueryCacheService {
       port: parseInt(String(this.configService.get<number>('REDIS_PORT')), 10),
     });
     this.ttlSeconds = parseInt(
-      String(this.configService.get<number>('QUEUE_CACHE_TTL', 3600)),
+      String(this.configService.get<number>('QUERY_CACHE_TTL', 3600)),
       10,
     ); // default- 1hr
     this.isEnabled =
-      this.configService.get<string>('QUEUE_CACHE_ENABLED', 'true') === 'true'; // kill switch, disable caching without changing code
+      this.configService.get<string>('QUERY_CACHE_ENABLED', 'true') === 'true'; // kill switch, disable caching without changing code
 
     this.logger.log(
       `Initialized — enabled: ${this.isEnabled}, TTL: ${this.ttlSeconds}s`,
@@ -97,7 +97,14 @@ export class QueryCacheService {
       const cacheKey = await this.buildCacheKey(collectionId, question);
       answer.cachedAt = new Date().toISOString(); //override it to user current date
 
-      await this.redis.setex(cacheKey, this.ttlSeconds, JSON.stringify(answer));
+      // await this.redis.setex(cacheKey, this.ttlSeconds, JSON.stringify(answer));
+      await this.redis.set(
+        cacheKey,
+        JSON.stringify(answer),
+        'EX',
+        this.ttlSeconds,
+      );
+
       this.logger.log(
         `CACHED answer for collection ${collectionId} (TTL: ${this.ttlSeconds}s)`,
       );

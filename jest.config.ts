@@ -14,6 +14,7 @@ const config: Config = {
       },
       moduleNameMapper: {
         '^src/(.*)$': '<rootDir>/src/$1',
+        '^test/(.*)$': '<rootDir>/test/$1',
         '^(\\.{1,2}/.*)\\.js$': '$1',
       },
       setupFiles: ['<rootDir>/test/setup-unit.ts'],
@@ -26,12 +27,14 @@ const config: Config = {
       rootDir: '.',
       testEnvironment: 'node',
       transform: {
-        '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+        '^.+\\.(ts|js)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
       },
       moduleNameMapper: {
         '^src/(.*)$': '<rootDir>/src/$1',
+        '^test/(.*)$': '<rootDir>/test/$1',
         '^(\\.{1,2}/.*)\\.js$': '$1',
       },
+      transformIgnorePatterns: [],
       // Integration tests need longer timeouts for container startup
       testTimeout: 60_000,
       setupFiles: ['<rootDir>/test/setup-integration.ts'],
