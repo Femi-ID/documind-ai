@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class EmbeddingService {
-  private readonly logger = new Logger(EmbeddingService.name);
+export class OllamaEmbeddingService {
+  private readonly logger = new Logger(OllamaEmbeddingService.name);
   private readonly ollamaUrl: string;
   private readonly model = 'nomic-embed-text';
 

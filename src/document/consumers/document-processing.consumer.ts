@@ -3,7 +3,7 @@
 // or listen for events on the queue, or both.
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { DocumentFileType, DocumentStatus } from 'src/generated/prisma/enums';
 import { MinioService } from 'src/minio/minio.service';
@@ -13,8 +13,9 @@ import { TextExtractionService } from '../services/text-extraction.service';
 import { ChunkingService } from '../services/chunking.service';
 import { QUEUE } from '../constants';
 import { DocumentService } from '../document.service';
-import { EmbeddingService } from '../services/ollama-embedding.service';
+import { OllamaEmbeddingService } from '../services/ollama-embedding.service';
 import { QueryCacheService } from 'src/query-cache/query-cache.service';
+import { EMBEDDING_SERVICE } from 'src/conversation/conversations.tokens';
 
 @Processor(QUEUE.DOCUMENT_PROCESSING) // name of the queue the class picks jobs from
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -25,7 +26,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly minioService: MinioService,
     private readonly textExtractionService: TextExtractionService,
     private readonly chunkingService: ChunkingService,
-    private readonly embeddingService: EmbeddingService,
+    @Inject(EMBEDDING_SERVICE)
+    private readonly embeddingService: OllamaEmbeddingService,
     private readonly documentService: DocumentService,
     private readonly queryCacheService: QueryCacheService,
   ) {

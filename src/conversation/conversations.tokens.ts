@@ -1,0 +1,2 @@
+export const EMBEDDING_SERVICE = 'EMBEDDING_SERVICE';
+export const LLM_SERVICE = 'LLM_SERVICE';
