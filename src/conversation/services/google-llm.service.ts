@@ -18,12 +18,16 @@ export interface LlmResponse {
 export class GoogleLlmService {
   private readonly logger = new Logger(GoogleLlmService.name);
   private readonly genai: GoogleGenAI;
-  private readonly model = 'gemini-2.0-flash';
+  private readonly model: string;
 
   constructor(private readonly configService: ConfigService) {
     this.genai = new GoogleGenAI({
-      apiKey: this.configService.getOrThrow<string>('GOOGLE_API_KEY'),
+      apiKey: this.configService.getOrThrow<string>('GEMINI_API_KEY'),
     });
+    this.model = this.configService.get<string>(
+      'GEMINI_LLM_MODEL',
+      'gemini-2.0-flash',
+    );
   }
 
   private async withRetry<T>(

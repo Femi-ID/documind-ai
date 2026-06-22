@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -7,19 +8,20 @@ import {
 import { SendMessageDto } from './dto/create-conversation.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MessageRole } from 'src/generated/prisma/enums';
-// import { EmbeddingService } from 'src/document/services/google-embedding.service';
 import { VectorSearchService } from './services/vector-search.service';
 import { ContextAssemblyService } from './services/context-assembly.service';
 import { OllamaLlmService } from './services/ollama-llm.service';
-import { EmbeddingService } from 'src/document/services/ollama-embedding.service';
+import { OllamaEmbeddingService } from 'src/document/services/ollama-embedding.service';
 import { QueryCacheService } from 'src/query-cache/query-cache.service';
+import { EMBEDDING_SERVICE } from './conversations.tokens';
 
 @Injectable()
 export class ConversationService {
   private readonly logger = new Logger(ConversationService.name);
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly embeddingService: EmbeddingService,
+    @Inject(EMBEDDING_SERVICE)
+    private readonly embeddingService: OllamaEmbeddingService,
     private readonly vectorSearchService: VectorSearchService,
     private readonly contextAssemblyService: ContextAssemblyService,
     private readonly ollamaLLMService: OllamaLlmService,
