@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HealthIndicatorResult, HealthIndicatorService } from '@nestjs/terminus';
+import {
+  HealthIndicatorResult,
+  HealthIndicatorService,
+} from '@nestjs/terminus';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -12,8 +15,12 @@ export class RedisHealthIndicator {
     private readonly configService: ConfigService,
   ) {
     this.redis = new Redis({
-      host: this.configService.get<string>('REDIS_HOST'),
-      port: parseInt(String(this.configService.get('REDIS_PORT')), 10),
+      host: this.configService.get<string>('REDIS_HOST', 'localhost'),
+      port: parseInt(String(this.configService.get('REDIS_PORT', 6379)), 10),
+      password: this.configService.get<string>('REDIS_PASSWORD'),
+      tls:
+        this.configService.get<string>('REDIS_TLS') === 'true' ? {} : undefined,
+      maxRetriesPerRequest: 3,
     });
   }
 

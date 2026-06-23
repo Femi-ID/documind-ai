@@ -16,10 +16,21 @@ export class QueryCacheService {
   private readonly VERSION_PREFIX = 'collection_doc_version';
 
   constructor(private readonly configService: ConfigService) {
+    const password = this.configService.get<string>('REDIS_PASSWORD');
+    const useTls = this.configService.get<string>('REDIS_TLS') === 'true';
+
     this.redis = new Redis({
-      host: this.configService.get<string>('REDIS_HOST'),
-      port: parseInt(String(this.configService.get<number>('REDIS_PORT')), 10),
+      host: this.configService.get<string>('REDIS_HOST', 'localhost'),
+      port: parseInt(
+        String(this.configService.get<number>('REDIS_PORT', 6379)),
+        10,
+      ),
+      password,
+      tls: useTls ? {} : undefined, // an empty object enables TLS with default settings
+      maxRetriesPerRequest: 3,
+      retryStrategy: (times: number) => Math.min(times * 100, 5000), // exponential backoff up to 5 secs.
     });
+
     this.ttlSeconds = parseInt(
       String(this.configService.get<number>('QUERY_CACHE_TTL', 3600)),
       10,
@@ -28,7 +39,7 @@ export class QueryCacheService {
       this.configService.get<string>('QUERY_CACHE_ENABLED', 'true') === 'true'; // kill switch, disable caching without changing code
 
     this.logger.log(
-      `Initialized — enabled: ${this.isEnabled}, TTL: ${this.ttlSeconds}s`,
+      `Initialized — enabled: ${this.isEnabled}, TTL: ${this.ttlSeconds}s, TLS: ${useTls}`,
     );
   }
 

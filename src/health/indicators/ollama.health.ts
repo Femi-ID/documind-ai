@@ -8,16 +8,29 @@ import {
 @Injectable()
 export class OllamaHealthIndicator {
   private readonly ollamaUrl: string;
+  private readonly llmProvider: string;
 
   constructor(
     private readonly healthIndicatorService: HealthIndicatorService,
     private readonly configService: ConfigService,
   ) {
-    this.ollamaUrl = this.configService.getOrThrow<string>('OLLAMA_URL');
+    this.ollamaUrl = this.configService.get<string>(
+      'OLLAMA_URL',
+      'http://localhost:11434',
+    );
+    this.llmProvider = this.configService.get<string>('LLM_PROVIDER', 'ollama');
   }
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const indicator = this.healthIndicatorService.check(key);
+
+    // Skip the check entirely if we're not using Ollama in this environment
+    if (this.llmProvider !== 'ollama') {
+      return indicator.up({
+        skipped: true,
+        reason: `LLM_PROVIDER is "${this.llmProvider}", not ollama`,
+      });
+    }
 
     try {
       const response = await fetch(this.ollamaUrl, {
