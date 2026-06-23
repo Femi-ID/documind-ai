@@ -13,7 +13,6 @@ import {
 } from '@nestjs/swagger';
 
 @ApiTags('Users')
-@ApiBearerAuth('access-token')
 @Controller({ version: '1', path: 'users' })
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
