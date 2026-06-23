@@ -8,21 +8,21 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    // const adapter = new PrismaPg({
-    //   connectionString: process.env.DATABASE_URL as string,
-    // });
-    // super({ adapter });
-
-    const pool = new Pool({
-      // DOCKER CONFIG
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT || '5433'),
-      database: process.env.DATABASE_NAME || 'docker_documind_db',
-      user: process.env.DATABASE_USER || 'postgres',
-      password: process.env.DATABASE_PASSWORD,
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL as string,
     });
+    super({ adapter });
 
-    const adapter = new PrismaPg(pool);
+    // const pool = new Pool({
+    //   // DOCKER CONFIG
+    //   host: process.env.DATABASE_HOST || 'localhost',
+    //   port: parseInt(process.env.DATABASE_PORT || '5433'),
+    //   database: process.env.DATABASE_NAME || 'docker_documind_db',
+    //   user: process.env.DATABASE_USER || 'postgres',
+    //   password: process.env.DATABASE_PASSWORD,
+    // });
+
+    // const adapter = new PrismaPg(pool);
     super({ adapter });
   }
 
