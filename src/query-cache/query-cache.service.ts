@@ -26,9 +26,20 @@ export class QueryCacheService {
         10,
       ),
       password,
-      tls: useTls ? {} : undefined, // an empty object enables TLS with default settings
+      tls: useTls ? { servername: host } : undefined, // an empty object enables TLS with default settings
+      keepAlive: 10_000,
       maxRetriesPerRequest: 3,
       retryStrategy: (times: number) => Math.min(times * 100, 5000), // exponential backoff up to 5 secs.
+      reconnectOnError: (err: Error) => {
+        const targetError = 'READONLY';
+        if (err.message.includes(targetError)) {
+          return true;
+        }
+        return (
+          err.message.includes('ECONNRESET') || err.message.includes('EPIPE')
+        );
+      },
+      enableOfflineQueue: false,
     });
 
     this.ttlSeconds = parseInt(

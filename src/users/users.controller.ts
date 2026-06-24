@@ -13,6 +13,7 @@ import {
 } from '@nestjs/swagger';
 
 @ApiTags('Users')
+// @ApiBearerAuth('access-token')
 @Controller({ version: '1', path: 'users' })
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
@@ -30,11 +31,12 @@ export class UsersController {
   @ApiResponse({ status: 409, description: 'Email already exists' })
   @Post('create')
   async createUser(@Body() createUserDto: CreateUserDto) {
-    return await this.usersService.createUser(createUserDto);
+    return await this.usersService.createUs       er(createUserDto);
   }
 
   @ApiOperation({ summary: 'Get the currently logged in user profile' })
   @ApiResponse({ status: 200, description: 'Returns user profile' })
+  @ApiBearerAuth('access-token')
   @Get('profile')
   async getProfile(@Request() req: UserRequest) {
     this.logger.log(`From req.user: ${JSON.stringify(req.user)}`);

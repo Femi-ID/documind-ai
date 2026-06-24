@@ -20,6 +20,7 @@ import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { QueryCacheModule } from './query-cache/query-cache.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { HealthModule } from './health/health.module';
+import { buildRedisOptions } from './common/utils/redis-options';
 
 @Module({
   imports: [
@@ -53,10 +54,7 @@ import { HealthModule } from './health/health.module';
           },
         ],
         storage: new ThrottlerStorageRedisService(
-          new Redis({
-            host: config.getOrThrow('REDIS_HOST'),
-            port: parseInt(config.getOrThrow('REDIS_PORT'), 10),
-          }),
+          new Redis(buildRedisOptions(config)),
         ),
       }),
     }),
