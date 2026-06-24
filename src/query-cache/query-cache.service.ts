@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { CachedAnswer } from './interface/cached-answer.interface';
 import { createHash } from 'crypto';
+import { buildRedisOptions } from 'src/common/utils/redis-options';
 
 @Injectable()
 export class QueryCacheService {
@@ -16,31 +17,9 @@ export class QueryCacheService {
   private readonly VERSION_PREFIX = 'collection_doc_version';
 
   constructor(private readonly configService: ConfigService) {
-    const password = this.configService.get<string>('REDIS_PASSWORD');
     const useTls = this.configService.get<string>('REDIS_TLS') === 'true';
 
-    this.redis = new Redis({
-      host: this.configService.get<string>('REDIS_HOST', 'localhost'),
-      port: parseInt(
-        String(this.configService.get<number>('REDIS_PORT', 6379)),
-        10,
-      ),
-      password,
-      tls: useTls ? { servername: host } : undefined, // an empty object enables TLS with default settings
-      keepAlive: 10_000,
-      maxRetriesPerRequest: 3,
-      retryStrategy: (times: number) => Math.min(times * 100, 5000), // exponential backoff up to 5 secs.
-      reconnectOnError: (err: Error) => {
-        const targetError = 'READONLY';
-        if (err.message.includes(targetError)) {
-          return true;
-        }
-        return (
-          err.message.includes('ECONNRESET') || err.message.includes('EPIPE')
-        );
-      },
-      enableOfflineQueue: false,
-    });
+    this.redis = new Redis(buildRedisOptions(this.configService));
 
     this.ttlSeconds = parseInt(
       String(this.configService.get<number>('QUERY_CACHE_TTL', 3600)),

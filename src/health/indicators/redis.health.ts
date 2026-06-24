@@ -5,6 +5,7 @@ import {
   HealthIndicatorService,
 } from '@nestjs/terminus';
 import Redis from 'ioredis';
+import { buildRedisOptions } from 'src/common/utils/redis-options';
 
 @Injectable()
 export class RedisHealthIndicator {
@@ -14,17 +15,7 @@ export class RedisHealthIndicator {
     private readonly healthIndicatorService: HealthIndicatorService,
     private readonly configService: ConfigService,
   ) {
-    const useTls = this.configService.get<string>('REDIS_TLS') === 'true';
-
-    this.redis = new Redis({
-      host: this.configService.get<string>('REDIS_HOST', 'localhost'),
-      port: parseInt(String(this.configService.get('REDIS_PORT', 6379)), 10),
-      password: this.configService.get<string>('REDIS_PASSWORD'),
-      tls: useTls ? { servername: host } : undefined,
-      keepAlive: 10_000,
-      maxRetriesPerRequest: 3,
-      enableOfflineQueue: false,
-    });
+    this.redis = new Redis(buildRedisOptions(this.configService));
   }
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
