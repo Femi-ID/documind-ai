@@ -31,7 +31,7 @@ export class UsersController {
   @ApiResponse({ status: 409, description: 'Email already exists' })
   @Post('create')
   async createUser(@Body() createUserDto: CreateUserDto) {
-    return await this.usersService.createUs       er(createUserDto);
+    return await this.usersService.createUser(createUserDto);
   }
 
   @ApiOperation({ summary: 'Get the currently logged in user profile' })
