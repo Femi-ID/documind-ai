@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   HttpCode,
   HttpStatus,
@@ -19,6 +20,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { LoginUserDto } from './dtos/login-user.dto';
 
 // @Throttle({ default: { ttl: seconds(60), limit: 10 } }) // 10 requests per minute
 @SkipThrottle({
@@ -39,7 +41,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
-  async login(@Request() req: UserRequest) {
+  async login(@Request() req: UserRequest, @Body() loginUserDto: LoginUserDto) {
     return await this.authService.login(
       req.user.id,
       req.user.email,
